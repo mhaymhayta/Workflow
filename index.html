@@ -573,6 +573,15 @@ function renderAll() {
   const waiting = jobs.filter(j => WAIT_IDS.includes(j.status));
   const done    = jobs.filter(j => j.status === DONE_STATUS);
 
+  // Sort action tab: priority steps first, then by step order
+  const PRIORITY_STEPS = ['ข้อมูลครบ เตรียมตั้งกล้อง', 'ดำเนินการ ส่งภาพ draft', 'แก้ไขตามคอมเม้น'];
+  action.sort((a, b) => {
+    const aPri = PRIORITY_STEPS.includes(a.status) ? 0 : 1;
+    const bPri = PRIORITY_STEPS.includes(b.status) ? 0 : 1;
+    if (aPri !== bPri) return aPri - bPri;
+    return STEP_IDS.indexOf(a.status) - STEP_IDS.indexOf(b.status);
+  });
+
   document.getElementById('st-action').textContent  = action.length;
   document.getElementById('st-waiting').textContent = waiting.length;
   document.getElementById('st-done').textContent    = done.length;
@@ -624,16 +633,38 @@ function renderAll() {
       </div>`;
   }
 
-  // Group by customer
+  // Group by customer (waiting/done) or by status (todo)
   const groups = {};
-  items.forEach(j => { const c = j.cust || '?'; if (!groups[c]) groups[c] = []; groups[c].push(j); });
-
-  list.innerHTML = summaryHtml + Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([cust, cjobs]) =>
-    `<div class="list-section">
-      <div class="section-label">${cust}</div>
-      ${cjobs.map(j => jobCard(j)).join('')}
-    </div>`
-  ).join('');
+  if (currentTab === 'todo') {
+    items.forEach(j => {
+      const grpKey = PRIORITY_STEPS.includes(j.status) ? '🔥 ' + j.status : j.status;
+      if (!groups[grpKey]) groups[grpKey] = [];
+      groups[grpKey].push(j);
+    });
+    // Sort groups: priority first then step order
+    const sortedEntries = Object.entries(groups).sort((a, b) => {
+      const aStatus = a[0].replace('🔥 ', '');
+      const bStatus = b[0].replace('🔥 ', '');
+      const aPri = PRIORITY_STEPS.includes(aStatus) ? 0 : 1;
+      const bPri = PRIORITY_STEPS.includes(bStatus) ? 0 : 1;
+      if (aPri !== bPri) return aPri - bPri;
+      return STEP_IDS.indexOf(aStatus) - STEP_IDS.indexOf(bStatus);
+    });
+    list.innerHTML = summaryHtml + sortedEntries.map(([grpKey, cjobs]) =>
+      `<div class="list-section">
+        <div class="section-label">${grpKey} <span style="color:var(--text3);font-weight:400">${cjobs.length} งาน</span></div>
+        ${cjobs.map(j => jobCard(j)).join('')}
+      </div>`
+    ).join('');
+  } else {
+    items.forEach(j => { const c = j.cust || '?'; if (!groups[c]) groups[c] = []; groups[c].push(j); });
+    list.innerHTML = summaryHtml + Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([cust, cjobs]) =>
+      `<div class="list-section">
+        <div class="section-label">${cust}</div>
+        ${cjobs.map(j => jobCard(j)).join('')}
+      </div>`
+    ).join('');
+  }
 }
 
 function jobCard(j) {

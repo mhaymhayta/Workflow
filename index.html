@@ -474,7 +474,7 @@ a { color: inherit; text-decoration: none; }
 // ══════════════════════════════════════════════════════════
 // CONFIG — แก้ตรงนี้หลัง deploy Apps Script
 // ══════════════════════════════════════════════════════════
-const API_URL = 'https://script.google.com/macros/s/AKfycbyA0G-R1Z_tW5zgctG88YSGkPVucVp6lh5guqoLPrKPNww07AC8Nx3U_uAE_o7Z7UXCPg/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbw2mLep5rilQWHcrjVcDIs4rOUfYDW2JdHj24ObwISqJWuDPazKBoVHgKFhTAt_N8oO/exec';
 // ↑ ใส่ URL ที่ได้จาก Apps Script > Deploy > Web App
 
 // ══════════════════════════════════════════════════════════
@@ -700,8 +700,9 @@ function renderDetail() {
     <!-- Finance Card -->
     <div class="detail-card">
       <div class="detail-card-title">การเงิน & เอกสาร</div>
-      ${row('วางบิลวันที่', j.invoice_date||'—')}
-      ${row('รับเงินวันที่', j.payment_date||'—', j.payment_date?'green':'')}
+      ${row('เลขที่ใบกำกับภาษี', j.tax_no||'—', 'mono')}
+      ${row('วางบิลวันที่', j.invoice_date ? fmtDateTH(j.invoice_date) : '—')}
+      ${row('รับเงินวันที่', j.payment_date ? fmtDateTH(j.payment_date) : '—', j.payment_date?'green':'')}
       ${row('ทวิ 50', j.wht||'—', j.wht==='ครบแล้ว'?'green':'')}
     </div>
 
@@ -896,6 +897,10 @@ function editForm(j) {
       </div>
     </div>
     <div class="form-group">
+      <label class="form-label">เลขที่ใบกำกับภาษี</label>
+      <input class="form-input" id="e-taxno" value="${escHtml(j.tax_no||'')}" placeholder="เช่น IV2026001">
+    </div>
+    <div class="form-group">
       <label class="form-label">ทวิ 50</label>
       <select class="form-select" id="e-wht">
         <option value="" ${!j.wht?'selected':''}>ยัง</option>
@@ -973,6 +978,7 @@ async function submitEdit() {
       po_status: document.getElementById('e-po').value,
       invoice_date: document.getElementById('e-invdate').value,
       payment_date: document.getElementById('e-paydate').value,
+      tax_no: document.getElementById('e-taxno').value.trim(),
       wht: document.getElementById('e-wht').value,
       remark: document.getElementById('e-remark').value.trim(),
     });

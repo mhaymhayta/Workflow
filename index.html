@@ -474,7 +474,7 @@ a { color: inherit; text-decoration: none; }
 // ══════════════════════════════════════════════════════════
 // CONFIG — แก้ตรงนี้หลัง deploy Apps Script
 // ══════════════════════════════════════════════════════════
-const API_URL = 'https://script.google.com/macros/s/AKfycbwk_YWLdz5e8Btweadljqno_JeXs8SF612p_VAgy-gJ17-wbCkP4IJAkxxqA4bDZgA0YQ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyA0G-R1Z_tW5zgctG88YSGkPVucVp6lh5guqoLPrKPNww07AC8Nx3U_uAE_o7Z7UXCPg/exec';
 // ↑ ใส่ URL ที่ได้จาก Apps Script > Deploy > Web App
 
 // ══════════════════════════════════════════════════════════
@@ -690,6 +690,7 @@ function renderDetail() {
       ${row('ลูกค้า', `${j.cust||'—'} ${j.job_code||''}`)}
       ${row('ชื่อโครงการ', j.project_name||'—')}
       ${row('ผู้ติดต่อ', j.contact||'—')}
+      ${row('วันที่รับงาน', j.receive_date ? fmtDateTH(j.receive_date) : '—')}
       ${row('ใบเสนอราคา', j.quotation_no||'—', 'mono')}
       ${row('ราคารวม', j.total ? '฿'+Number(j.total).toLocaleString('th-TH') : '—', 'mono green')}
       ${row('สถานะ PO', j.po_status||'ยังไม่ออก', j.po_status==='ออกแล้ว' ? 'green' : 'amber')}
@@ -803,9 +804,14 @@ function addForm() {
     </div>
     <div class="form-row">
       <div class="form-group">
+        <label class="form-label">วันที่รับงาน</label>
+        <input class="form-input" id="f-recvdate" type="date" value="${new Date().toISOString().slice(0,10)}">
+      </div>
+      <div class="form-group">
         <label class="form-label">มูลค่า (บาท)</label>
         <input class="form-input" id="f-total" type="number" placeholder="0">
       </div>
+    </div>
       <div class="form-group">
         <label class="form-label">สถานะ PO</label>
         <select class="form-select" id="f-po">
@@ -863,9 +869,14 @@ function editForm(j) {
     </div>
     <div class="form-row">
       <div class="form-group">
+        <label class="form-label">วันที่รับงาน</label>
+        <input class="form-input" id="e-recvdate" type="date" value="${j.receive_date||''}">
+      </div>
+      <div class="form-group">
         <label class="form-label">มูลค่า (บาท)</label>
         <input class="form-input" id="e-total" type="number" value="${j.total||''}">
       </div>
+    </div>
       <div class="form-group">
         <label class="form-label">สถานะ PO</label>
         <select class="form-select" id="e-po">
@@ -929,6 +940,7 @@ async function submitAdd() {
       cust, job_code: document.getElementById('f-jcode').value.trim(),
       project_name: name,
       contact: document.getElementById('f-contact').value.trim(),
+      receive_date: document.getElementById('f-recvdate').value,
       total: document.getElementById('f-total').value || 0,
       po_status: document.getElementById('f-po').value,
       status: document.getElementById('f-status').value,
@@ -956,6 +968,7 @@ async function submitEdit() {
       contact: document.getElementById('e-contact').value.trim(),
       status: document.getElementById('e-status').value,
       missing_info: document.getElementById('e-missing')?.value?.trim() || '',
+      receive_date: document.getElementById('e-recvdate').value,
       total: document.getElementById('e-total').value || j.total,
       po_status: document.getElementById('e-po').value,
       invoice_date: document.getElementById('e-invdate').value,
@@ -994,6 +1007,12 @@ function daysSince(d) {
   return Math.floor((Date.now() - new Date(d)) / 86400000);
 }
 function timeAgo() { return new Date().toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' }); }
+function fmtDateTH(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  if (isNaN(dt)) return String(d);
+  return dt.toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'2-digit' });
+}
 function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function toast(msg, type='') {

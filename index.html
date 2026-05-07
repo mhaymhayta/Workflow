@@ -603,14 +603,24 @@ function renderAll() {
   // Summary bar for done tab
   let summaryHtml = '';
   if (currentTab === 'done') {
-    const total = done.reduce((sum, j) => sum + (Number(j.total) || 0), 0);
+    const totalDone = done.reduce((sum, j) => sum + (Number(j.total) || 0), 0);
+    const totalAll  = jobs.reduce((sum, j) => sum + (Number(j.total) || 0), 0);
     summaryHtml = `
-      <div style="background:var(--green-dim);border:1px solid rgba(52,199,89,.3);border-radius:var(--card-r);padding:14px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.06em;font-weight:600">รายได้รวมทั้งหมด</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">${done.length} งาน</div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:14px 16px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.06em;font-weight:600">รับเงินแล้ว</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${done.length} งาน</div>
+          </div>
+          <div style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--green)">฿${totalDone.toLocaleString('th-TH')}</div>
         </div>
-        <div style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--green)">฿${total.toLocaleString('th-TH')}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;font-weight:600">รายได้รวมทั้งหมด</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${jobs.length} งาน</div>
+          </div>
+          <div style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--text2)">฿${totalAll.toLocaleString('th-TH')}</div>
+        </div>
       </div>`;
   }
 

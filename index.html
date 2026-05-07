@@ -600,11 +600,25 @@ function renderAll() {
     return;
   }
 
+  // Summary bar for done tab
+  let summaryHtml = '';
+  if (currentTab === 'done') {
+    const total = done.reduce((sum, j) => sum + (Number(j.total) || 0), 0);
+    summaryHtml = `
+      <div style="background:var(--green-dim);border:1px solid rgba(52,199,89,.3);border-radius:var(--card-r);padding:14px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.06em;font-weight:600">รายได้รวมทั้งหมด</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${done.length} งาน</div>
+        </div>
+        <div style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--green)">฿${total.toLocaleString('th-TH')}</div>
+      </div>`;
+  }
+
   // Group by customer
   const groups = {};
   items.forEach(j => { const c = j.cust || '?'; if (!groups[c]) groups[c] = []; groups[c].push(j); });
 
-  list.innerHTML = Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([cust, cjobs]) =>
+  list.innerHTML = summaryHtml + Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([cust, cjobs]) =>
     `<div class="list-section">
       <div class="section-label">${cust}</div>
       ${cjobs.map(j => jobCard(j)).join('')}

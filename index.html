@@ -518,7 +518,7 @@ const CHIP_CFG = {
 // ══════════════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════════════
-let jobs = [], currentTab = 'todo', selectedJob = null;
+let jobs = [], currentTab = 'todo', selectedJob = null, doneSort = 'invoice';
 
 // ══════════════════════════════════════════════════════════
 // API
@@ -615,7 +615,7 @@ function renderAll() {
     const totalDone = done.reduce((sum, j) => sum + (Number(j.total) || 0), 0);
     const totalAll  = jobs.reduce((sum, j) => sum + (Number(j.total) || 0), 0);
     summaryHtml = `
-      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:14px 16px;margin-bottom:14px">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:14px 16px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--border)">
           <div>
             <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.06em;font-weight:600">รับเงินแล้ว</div>
@@ -630,10 +630,15 @@ function renderAll() {
           </div>
           <div style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--text2)">฿${totalAll.toLocaleString('th-TH')}</div>
         </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:12px">
+        <button onclick="doneSort='invoice';renderAll()" style="flex:1;padding:7px 4px;border-radius:9px;border:1.5px solid ${doneSort==='invoice'?'var(--green)':'var(--border)'};background:${doneSort==='invoice'?'var(--green-dim)':'var(--bg2)'};color:${doneSort==='invoice'?'var(--green)':'var(--text3)'};font-size:11px;font-weight:600;font-family:'Sarabun',sans-serif">เลข Invoice</button>
+        <button onclick="doneSort='tax';renderAll()" style="flex:1;padding:7px 4px;border-radius:9px;border:1.5px solid ${doneSort==='tax'?'var(--green)':'var(--border)'};background:${doneSort==='tax'?'var(--green-dim)':'var(--bg2)'};color:${doneSort==='tax'?'var(--green)':'var(--text3)'};font-size:11px;font-weight:600;font-family:'Sarabun',sans-serif">ใบกำกับภาษี</button>
+        <button onclick="doneSort='cust';renderAll()" style="flex:1;padding:7px 4px;border-radius:9px;border:1.5px solid ${doneSort==='cust'?'var(--green)':'var(--border)'};background:${doneSort==='cust'?'var(--green-dim)':'var(--bg2)'};color:${doneSort==='cust'?'var(--green)':'var(--text3)'};font-size:11px;font-weight:600;font-family:'Sarabun',sans-serif">กรุ๊ปลูกค้า</button>
       </div>`;
   }
 
-  // Group by customer (waiting/done) or by status (todo)
+  // Group by customer (waiting) or by status (todo) or sorted (done)
   const groups = {};
   if (currentTab === 'todo') {
     items.forEach(j => {
@@ -641,7 +646,6 @@ function renderAll() {
       if (!groups[grpKey]) groups[grpKey] = [];
       groups[grpKey].push(j);
     });
-    // Sort groups: priority first then step order
     const sortedEntries = Object.entries(groups).sort((a, b) => {
       const aStatus = a[0].replace('🔥 ', '');
       const bStatus = b[0].replace('🔥 ', '');
@@ -656,6 +660,45 @@ function renderAll() {
         ${cjobs.map(j => jobCard(j)).join('')}
       </div>`
     ).join('');
+  } else if (currentTab === 'done') {
+    if (doneSort === 'invoice') {
+      // Sort by invoice_no descending (latest first)
+      const sorted = [...items].sort((a, b) => {
+        const av = String(a.invoice_no || '').replace(/\D/g,'') || '0';
+        const bv = String(b.invoice_no || '').replace(/\D/g,'') || '0';
+        return Number(bv) - Number(av);
+      });
+      list.innerHTML = summaryHtml + `<div class="list-section">
+        <div class="section-label">เรียงตาม Invoice ล่าสุด</div>
+        ${sorted.map(j => jobCard(j)).join('')}
+      </div>`;
+    } else if (doneSort === 'tax') {
+      // Sort by tax_no descending
+      const sorted = [...items].sort((a, b) => {
+        const av = String(a.tax_no || '').replace(/\D/g,'') || '0';
+        const bv = String(b.tax_no || '').replace(/\D/g,'') || '0';
+        return Number(bv) - Number(av);
+      });
+      list.innerHTML = summaryHtml + `<div class="list-section">
+        <div class="section-label">เรียงตามใบกำกับภาษีล่าสุด</div>
+        ${sorted.map(j => jobCard(j)).join('')}
+      </div>`;
+    } else {
+      // Group by customer
+      items.forEach(j => { const c = j.cust || '?'; if (!groups[c]) groups[c] = []; groups[c].push(j); });
+      // Sort within each group by invoice_no desc
+      Object.values(groups).forEach(g => g.sort((a, b) => {
+        const av = String(a.invoice_no || '').replace(/\D/g,'') || '0';
+        const bv = String(b.invoice_no || '').replace(/\D/g,'') || '0';
+        return Number(bv) - Number(av);
+      }));
+      list.innerHTML = summaryHtml + Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([cust, cjobs]) =>
+        `<div class="list-section">
+          <div class="section-label">${cust} <span style="color:var(--text3);font-weight:400">${cjobs.length} งาน</span></div>
+          ${cjobs.map(j => jobCard(j)).join('')}
+        </div>`
+      ).join('');
+    }
   } else {
     items.forEach(j => { const c = j.cust || '?'; if (!groups[c]) groups[c] = []; groups[c].push(j); });
     list.innerHTML = summaryHtml + Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([cust, cjobs]) =>

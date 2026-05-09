@@ -729,13 +729,16 @@ function jobCard(j) {
   const amt = j.total ? `<span class="tag-amount">฿${Number(j.total).toLocaleString('th-TH')}</span>` : '';
   const daysHtml = days > 0 ? `<span class="card-days ${isAlert?'warn':''}">${isAlert?'⚠️ ':''}${days} วัน</span>` : '';
 
-  // Extra info for done tab
-  const doneInfo = isDone ? `
+  // Extra doc numbers - show on all tabs
+  const docInfo = `
     <div style="margin-top:6px;display:flex;flex-direction:column;gap:3px">
       ${j.quotation_no ? `<div style="font-size:11px;color:var(--text3)">ใบเสนอราคา <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.quotation_no}</span></div>` : ''}
       ${j.invoice_no   ? `<div style="font-size:11px;color:var(--text3)">Invoice <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.invoice_no}</span></div>` : ''}
       ${j.tax_no       ? `<div style="font-size:11px;color:var(--text3)">ใบกำกับภาษี <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.tax_no}</span></div>` : ''}
-    </div>` : '';
+    </div>`;
+
+  // Extra info for done tab (same as docInfo but kept for clarity)
+  const doneInfo = isDone ? docInfo : '';
 
   return `<div class="job-card ${grp} ${isAlert?'alert':''}" onclick="openDetail('${j.job_id}')">
     <div class="card-top">
@@ -746,9 +749,9 @@ function jobCard(j) {
       ${chipHtml}
     </div>
     <div class="card-name">${j.project_name||'(ไม่มีชื่อ)'}</div>
-    <div class="card-detail">${j.contact ? '👤 '+j.contact : ''}${j.quotation_no && !isDone ? ' · '+j.quotation_no : ''}</div>
+    <div class="card-detail">${j.contact ? '👤 '+j.contact : ''}</div>
     ${j.missing_info ? `<div class="missing-box">ขาด: ${j.missing_info}</div>` : ''}
-    ${doneInfo}
+    ${docInfo}
     <div class="card-footer">
       <div class="card-tags">${po}${amt}</div>
       ${daysHtml}

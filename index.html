@@ -482,15 +482,14 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbzA_SRLvxmWAPG7UQYkfQTx
 // ══════════════════════════════════════════════════════════
 const STEPS = [
   { id: 'รับงาน',                     label: 'รับงาน — รอข้อมูลจากลูกค้า',     group: 'waiting',  hasMissing: true },
-  { id: 'ข้อมูลครบ เตรียมตั้งกล้อง', label: 'ข้อมูลครบ เตรียมตั้งกล้องส่งลูกค้า', group: 'action'  },
-  { id: 'ตั้งกล้อง ส่งลูกค้าแล้ว',  label: 'ตั้งกล้อง ส่งลูกค้าแล้ว — รอเลือกมุม', group: 'waiting' },
-  { id: 'รอลูกค้าเลือกมุม',           label: 'รอลูกค้าเลือกมุม',                group: 'waiting'  },
-  { id: 'ลูกค้าเลือกมุมแล้ว',        label: 'ลูกค้าเลือกมุมแล้ว — ส่งใบเสนอราคา', group: 'action'  },
+  { id: 'ส่งมุมกล้อง',                label: 'ส่งมุมกล้อง — รอลูกค้าเลือกมุม', group: 'waiting' },
+  { id: 'ส่งใบเสนอราคา',              label: 'ส่งใบเสนอราคา',                   group: 'action'  },
   { id: 'ดำเนินการ ส่งภาพ draft',     label: 'ดำเนินการ ส่งภาพ Render',         group: 'action'  },
   { id: 'รอลูกค้าคอมเม้น',            label: 'รอลูกค้าคอมเม้น',                 group: 'waiting'  },
   { id: 'แก้ไขตามคอมเม้น',           label: 'แก้ไขตามคอมเม้น และส่ง',          group: 'action'  },
   { id: 'ส่ง final',                  label: 'ส่ง Final แล้ว',                  group: 'action'  },
-  { id: 'วางบิล',                     label: 'วางบิล (รอ PO ถ้ายังไม่ออก)',     group: 'action'  },
+  { id: 'วางบิล',                     label: 'วางบิล',                          group: 'action'  },
+  { id: 'เตรียมส่งเอกสาร',           label: 'เตรียมส่งเอกสาร',                 group: 'action'  },
   { id: 'ส่งเอกสาร',                  label: 'ส่งเอกสารแล้ว',                   group: 'action'  },
   { id: 'รับเงินแล้ว',               label: 'รับเช็ค / เงินโอนเข้าแล้ว ✓',     group: 'done'    },
 ];
@@ -502,15 +501,14 @@ const ACTION_IDS  = STEPS.filter(s => s.group === 'action' || s.group === 'waiti
 // ── Status colors ────────────────────────────────────────
 const CHIP_CFG = {
   'รับงาน':                     ['#2E2010','#FF9F0A','#FF9F0A'],
-  'ข้อมูลครบ เตรียมตั้งกล้อง': ['#0A1F3A','#0A84FF','#0A84FF'],
-  'ตั้งกล้อง ส่งลูกค้าแล้ว':  ['#0A1F3A','#5AC8FA','#5AC8FA'],
-  'รอลูกค้าเลือกมุม':           ['#2E2010','#FF9F0A','#FF9F0A'],
-  'ลูกค้าเลือกมุมแล้ว':        ['#0A1F3A','#0A84FF','#0A84FF'],
+  'ส่งมุมกล้อง':                ['#2E2010','#FF9F0A','#FF9F0A'],
+  'ส่งใบเสนอราคา':              ['#0A1F3A','#0A84FF','#0A84FF'],
   'ดำเนินการ ส่งภาพ draft':     ['#1A3325','#34C759','#34C759'],
   'รอลูกค้าคอมเม้น':            ['#2E2010','#FF9F0A','#FF9F0A'],
   'แก้ไขตามคอมเม้น':           ['#1A3325','#34C759','#34C759'],
   'ส่ง final':                  ['#0A1F3A','#0A84FF','#0A84FF'],
   'วางบิล':                     ['#1E1030','#BF5AF2','#BF5AF2'],
+  'เตรียมส่งเอกสาร':           ['#1E1030','#BF5AF2','#BF5AF2'],
   'ส่งเอกสาร':                  ['#1E1030','#BF5AF2','#BF5AF2'],
   'รับเงินแล้ว':               ['#1A3325','#34C759','#34C759'],
 };
@@ -574,7 +572,7 @@ function renderAll() {
   const done    = jobs.filter(j => j.status === DONE_STATUS);
 
   // Sort action tab: priority steps first, then by step order
-  const PRIORITY_STEPS = ['ข้อมูลครบ เตรียมตั้งกล้อง', 'ดำเนินการ ส่งภาพ draft', 'แก้ไขตามคอมเม้น'];
+  const PRIORITY_STEPS = ['ส่งมุมกล้อง', 'ดำเนินการ ส่งภาพ draft', 'แก้ไขตามคอมเม้น'];
   action.sort((a, b) => {
     const aPri = PRIORITY_STEPS.includes(a.status) ? 0 : 1;
     const bPri = PRIORITY_STEPS.includes(b.status) ? 0 : 1;

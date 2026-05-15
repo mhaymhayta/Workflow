@@ -1099,10 +1099,8 @@ async function submitEdit() {
     });
     if (res.ok) {
       closeModal();
+      closePage();
       await syncJobs();
-      // Reopen detail if still on detail page
-      const updatedJob = jobs.find(x => x.job_id === j.job_id);
-      if (updatedJob) { selectedJob = updatedJob; renderDetail(); }
       toast('บันทึกแล้ว ✓', 'ok');
     } else toast('Error: ' + (res.error||''), 'err');
   } catch(_) { toast('ไม่มีสัญญาณ', 'err'); }

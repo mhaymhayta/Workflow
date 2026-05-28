@@ -5,402 +5,149 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#1C1C1E">
+<meta name="theme-color" content="#0F0F11">
 <title>JobFlow</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ── Reset & Base ───────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-:root {
-  --bg:        #0F0F11;
-  --bg2:       #18181C;
-  --bg3:       #222228;
-  --border:    #2C2C34;
-  --border2:   #38383F;
-  --text:      #F2F2F5;
-  --text2:     #9898A8;
-  --text3:     #5A5A6A;
-  --green:     #34C759;
-  --green-dim: #1A3325;
-  --amber:     #FF9F0A;
-  --amber-dim: #2E2010;
-  --blue:      #0A84FF;
-  --blue-dim:  #0A1F3A;
-  --red:       #FF453A;
-  --red-dim:   #2E1010;
-  --purple:    #BF5AF2;
-  --purple-dim:#1E1030;
-  --teal:      #5AC8FA;
-  --card-r:    14px;
-  --safe-top:  env(safe-area-inset-top, 0px);
-  --safe-bot:  env(safe-area-inset-bottom, 0px);
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0F0F11;--bg2:#18181C;--bg3:#222228;--border:#2C2C34;--border2:#38383F;
+  --text:#F2F2F5;--text2:#9898A8;--text3:#5A5A6A;
+  --green:#34C759;--green-dim:#1A3325;--amber:#FF9F0A;--amber-dim:#2E2010;
+  --blue:#0A84FF;--blue-dim:#0A1F3A;--red:#FF453A;--red-dim:#2E1010;
+  --purple:#BF5AF2;--purple-dim:#1E1030;--teal:#5AC8FA;
+  --card-r:14px;--safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px)
 }
-html { background: var(--bg); }
-body {
-  font-family: 'Sarabun', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100dvh;
-  overscroll-behavior: none;
-}
-button { font-family: inherit; cursor: pointer; border: none; background: none; }
-input, select, textarea { font-family: inherit; }
-a { color: inherit; text-decoration: none; }
-
-/* ── Layout ─────────────────────────────────────── */
-.app { max-width: 480px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; position: relative; }
-
-/* ── Topbar ─────────────────────────────────────── */
-.topbar {
-  padding: calc(var(--safe-top) + 12px) 16px 12px;
-  background: rgba(15,15,17,.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 100;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.logo {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 17px; font-weight: 600; letter-spacing: -.5px;
-  background: linear-gradient(135deg, var(--green) 0%, var(--teal) 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
-.topbar-sub { font-size: 11px; color: var(--text3); margin-top: 1px; font-family: 'IBM Plex Mono', monospace; }
-.topbar-actions { display: flex; gap: 8px; align-items: center; }
-.icon-btn {
-  width: 36px; height: 36px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px; transition: all .15s;
-}
-.icon-btn:active { transform: scale(.92); }
-.btn-sync { background: var(--bg3); color: var(--text2); }
-.btn-add  { background: var(--green); color: #000; font-weight: 700; font-size: 20px; }
-.btn-sync.spinning { animation: spin .8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── Stats row ──────────────────────────────────── */
-.stats-row {
-  display: flex; gap: 8px; padding: 14px 16px 0;
-}
-.stat-card {
-  flex: 1; background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--card-r); padding: 11px 12px;
-  display: flex; flex-direction: column; gap: 2px;
-}
-.stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; }
-.stat-value { font-size: 22px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; line-height: 1; }
-.sv-action { color: var(--amber); }
-.sv-waiting { color: var(--blue); }
-.sv-done   { color: var(--green); }
-
-/* ── Alert Banner ───────────────────────────────── */
-.alert-banner {
-  margin: 12px 16px 0;
-  background: var(--amber-dim); border: 1px solid rgba(255,159,10,.3);
-  border-radius: var(--card-r); padding: 10px 14px;
-  font-size: 12px; color: var(--amber);
-  display: flex; align-items: center; gap: 8px;
-  animation: fadeIn .3s ease;
-}
-
-/* ── Tabs ───────────────────────────────────────── */
-.tabs-wrap { padding: 14px 16px 0; }
-.tabs {
-  display: flex; background: var(--bg2);
-  border: 1px solid var(--border); border-radius: 12px;
-  padding: 3px; gap: 3px;
-}
-.tab {
-  flex: 1; padding: 8px 4px; border-radius: 9px;
-  font-size: 12px; font-weight: 500; color: var(--text3);
-  transition: all .2s; text-align: center; line-height: 1.2;
-}
-.tab.active {
-  background: var(--bg3); color: var(--text);
-  box-shadow: 0 1px 4px rgba(0,0,0,.4);
-}
-
-/* ── Job List ───────────────────────────────────── */
-.list-wrap { padding: 12px 16px calc(var(--safe-bot) + 24px); flex: 1; }
-.list-section { margin-bottom: 20px; }
-.section-label {
-  font-size: 11px; color: var(--text3); font-weight: 600;
-  text-transform: uppercase; letter-spacing: .08em;
-  padding: 0 2px; margin-bottom: 8px;
-  display: flex; align-items: center; gap: 6px;
-}
-.section-label::after {
-  content: ''; flex: 1; height: 1px; background: var(--border);
-}
-
-/* ── Job Card ───────────────────────────────────── */
-.job-card {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--card-r); padding: 13px 14px;
-  margin-bottom: 8px; cursor: pointer;
-  transition: border-color .15s, background .15s;
-  position: relative; overflow: hidden;
-  animation: fadeIn .25s ease;
-}
-.job-card::before {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-  width: 3px; border-radius: 3px 0 0 3px;
-}
-.job-card.action::before  { background: var(--amber); }
-.job-card.waiting::before { background: var(--blue); }
-.job-card.done::before    { background: var(--green); }
-.job-card:active { background: var(--bg3); border-color: var(--border2); }
-.job-card.alert  { border-color: rgba(255,69,58,.4); }
-
-.card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 5px; }
-.card-meta { display: flex; align-items: center; gap: 6px; }
-.cust-badge {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px; font-weight: 600;
-  background: var(--green-dim); color: var(--green);
-  padding: 2px 7px; border-radius: 6px; white-space: nowrap;
-}
-.job-code { font-size: 10px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; }
-.status-chip {
-  font-size: 10px; font-weight: 600;
-  padding: 3px 9px; border-radius: 20px;
-  white-space: nowrap; flex-shrink: 0;
-  display: flex; align-items: center; gap: 4px;
-}
-.chip-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-
-.card-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; line-height: 1.3; }
-.card-detail { font-size: 11px; color: var(--text2); margin-bottom: 8px; }
-
-.card-footer { display: flex; justify-content: space-between; align-items: center; }
-.card-tags { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
-.tag {
-  font-size: 10px; padding: 2px 7px; border-radius: 8px; font-weight: 500;
-}
-.tag-po-yes  { background: var(--green-dim); color: var(--green); }
-.tag-po-no   { background: var(--amber-dim); color: var(--amber); }
-.tag-amount  { color: var(--text3); font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
-.card-days   { font-size: 10px; color: var(--text3); }
-.card-days.warn { color: var(--red); font-weight: 600; }
-
-/* ── Empty ──────────────────────────────────────── */
-.empty { text-align: center; padding: 48px 20px; color: var(--text3); }
-.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: .4; }
-.empty-text { font-size: 14px; }
-
-/* ── Detail Page ────────────────────────────────── */
-.page {
-  position: fixed; inset: 0; background: var(--bg);
-  z-index: 200; display: flex; flex-direction: column;
-  transform: translateX(100%); transition: transform .3s cubic-bezier(.4,0,.2,1);
-  max-width: 480px; margin: 0 auto;
-}
-.page.open { transform: translateX(0); }
-
-.page-topbar {
-  padding: calc(var(--safe-top) + 12px) 16px 12px;
-  background: rgba(15,15,17,.92);
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 12px;
-}
-.back-btn {
-  width: 36px; height: 36px; border-radius: 10px;
-  background: var(--bg3); color: var(--text2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; flex-shrink: 0;
-}
-.back-btn:active { opacity: .7; }
-.page-title { font-size: 15px; font-weight: 700; flex: 1; }
-.edit-btn {
-  padding: 7px 14px; background: var(--blue); color: #fff;
-  border-radius: 10px; font-size: 13px; font-weight: 600;
-}
-.edit-btn:active { opacity: .8; }
-
-.page-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px calc(var(--safe-bot) + 80px); }
-
-/* ── Detail Sections ────────────────────────────── */
-.detail-card {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--card-r); margin-bottom: 12px; overflow: hidden;
-}
-.detail-card-title {
-  font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .08em; color: var(--text3);
-  padding: 10px 14px 8px; border-bottom: 1px solid var(--border);
-}
-.detail-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 10px 14px; border-bottom: 1px solid var(--border);
-}
-.detail-row:last-child { border-bottom: none; }
-.detail-key { font-size: 12px; color: var(--text2); }
-.detail-val { font-size: 13px; font-weight: 500; text-align: right; max-width: 60%; }
-.detail-val.mono { font-family: 'IBM Plex Mono', monospace; }
-.detail-val.green { color: var(--green); }
-.detail-val.amber { color: var(--amber); }
-.detail-val.red   { color: var(--red); }
-
-/* ── Status Progress ────────────────────────────── */
-.progress-wrap { padding: 14px; }
-.progress-step {
-  display: flex; gap: 12px; align-items: flex-start;
-  margin-bottom: 0;
-}
-.step-left { display: flex; flex-direction: column; align-items: center; }
-.step-dot {
-  width: 22px; height: 22px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; font-size: 10px;
-}
-.step-dot.done    { background: var(--green); }
-.step-dot.active  { background: var(--amber); box-shadow: 0 0 0 3px var(--amber-dim); }
-.step-dot.future  { background: var(--bg3); border: 1.5px solid var(--border2); }
-.step-line {
-  width: 1.5px; flex: 1; min-height: 14px; margin: 2px 0;
-  background: var(--border);
-}
-.step-line.done { background: var(--green); }
-.step-body { padding-top: 2px; flex: 1; padding-bottom: 14px; }
-.step-name {
-  font-size: 13px; line-height: 1.3;
-}
-.step-name.done   { color: var(--text3); }
-.step-name.active { color: var(--text); font-weight: 600; }
-.step-name.future { color: var(--text3); }
-.step-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
-
-/* ── Action Button at bottom of detail ─────────── */
-.detail-action-bar {
-  position: sticky; bottom: 0;
-  background: linear-gradient(to top, var(--bg) 70%, transparent);
-  padding: calc(var(--safe-bot) + 12px) 16px 16px;
-}
-.next-step-btn {
-  width: 100%; padding: 15px;
-  background: linear-gradient(135deg, var(--green) 0%, var(--teal) 100%);
-  color: #000; font-size: 15px; font-weight: 700;
-  border-radius: 14px; letter-spacing: -.2px;
-  transition: all .15s; box-shadow: 0 4px 16px rgba(52,199,89,.25);
-}
-.next-step-btn:active { transform: scale(.97); box-shadow: none; }
-.next-step-btn:disabled { background: var(--bg3); color: var(--text3); box-shadow: none; }
-
-/* ── Modal / Sheet ──────────────────────────────── */
-.overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,.7); z-index: 300;
-  display: none; align-items: flex-end; justify-content: center;
-  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-}
-.overlay.open { display: flex; }
-.modal-sheet {
-  background: var(--bg2);
-  border-radius: 20px 20px 0 0;
-  width: 100%; max-width: 480px;
-  max-height: 90dvh; overflow-y: auto;
-  padding: 0 0 calc(var(--safe-bot) + 8px);
-  animation: slideUp .3s cubic-bezier(.4,0,.2,1);
-}
-@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-.modal-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 12px auto 0; }
-.modal-header { padding: 14px 18px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-.modal-title { font-size: 16px; font-weight: 700; }
-.modal-close { width: 28px; height: 28px; border-radius: 8px; background: var(--bg3); color: var(--text2); display: flex; align-items: center; justify-content: center; font-size: 13px; }
-.modal-body { padding: 16px 18px; }
-
-/* ── Form Elements ──────────────────────────────── */
-.form-group { margin-bottom: 14px; }
-.form-label { font-size: 11px; color: var(--text2); margin-bottom: 5px; display: block; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
-.form-input, .form-select {
-  width: 100%; padding: 11px 13px;
-  background: var(--bg3); border: 1px solid var(--border2);
-  border-radius: 10px; color: var(--text);
-  font-size: 14px; outline: none;
-  transition: border-color .15s;
-  -webkit-appearance: none; appearance: none;
-}
-.form-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235A5A6A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
-.form-input:focus, .form-select:focus { border-color: var(--blue); }
-.form-input::placeholder { color: var(--text3); }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.form-textarea { resize: none; height: 72px; }
-
-/* ── Status Picker in form ──────────────────────── */
-.status-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
-}
-.status-option {
-  padding: 9px 10px; border-radius: 10px;
-  border: 1.5px solid var(--border2);
-  background: var(--bg3); font-size: 12px; color: var(--text2);
-  text-align: left; line-height: 1.3; transition: all .15s;
-}
-.status-option.selected {
-  border-color: var(--green);
-  background: var(--green-dim);
-  color: var(--text);
-}
-.status-option:active { opacity: .8; }
-
-/* ── Submit Buttons ─────────────────────────────── */
-.form-actions { display: flex; gap: 10px; margin-top: 20px; }
-.btn-primary {
-  flex: 2; padding: 13px;
-  background: var(--green); color: #000;
-  border-radius: 12px; font-size: 14px; font-weight: 700;
-  transition: all .15s;
-}
-.btn-primary:active { opacity: .85; transform: scale(.98); }
-.btn-secondary {
-  flex: 1; padding: 13px;
-  background: var(--bg3); color: var(--text2);
-  border-radius: 12px; font-size: 14px;
-  border: 1px solid var(--border2);
-}
-.btn-secondary:active { opacity: .7; }
-.btn-danger {
-  flex: 1; padding: 13px;
-  background: var(--red-dim); color: var(--red);
-  border-radius: 12px; font-size: 14px;
-  border: 1px solid rgba(255,69,58,.3);
-}
-
-/* ── Missing info box ───────────────────────────── */
-.missing-box {
-  background: var(--red-dim); border: 1px solid rgba(255,69,58,.3);
-  border-radius: 10px; padding: 10px 13px;
-  font-size: 12px; color: var(--red); margin-top: 8px;
-}
-
-/* ── Toast ──────────────────────────────────────── */
-.toast {
-  position: fixed; bottom: calc(var(--safe-bot) + 80px); left: 50%; transform: translateX(-50%) translateY(20px);
-  background: var(--bg3); border: 1px solid var(--border2);
-  color: var(--text); padding: 10px 18px; border-radius: 20px;
-  font-size: 13px; font-weight: 500; z-index: 9999;
-  opacity: 0; transition: all .25s; pointer-events: none; white-space: nowrap;
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.toast.ok   { border-color: rgba(52,199,89,.4); color: var(--green); }
-.toast.err  { border-color: rgba(255,69,58,.4); color: var(--red); }
-
-/* ── Misc ───────────────────────────────────────── */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-.loading-bar {
-  height: 2px; background: linear-gradient(90deg, var(--green), var(--teal));
-  position: fixed; top: 0; left: 0; z-index: 9999;
-  animation: loadBar 1.2s ease-in-out infinite;
-}
-@keyframes loadBar { 0%{width:0;opacity:1} 60%{width:80%;opacity:1} 100%{width:100%;opacity:0} }
+html{background:var(--bg)}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overscroll-behavior:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:inherit}
+.app{max-width:480px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;position:relative}
+.topbar{padding:calc(var(--safe-top) + 12px) 16px 12px;background:rgba(15,15,17,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;letter-spacing:-.5px;background:linear-gradient(135deg,var(--green) 0%,var(--teal) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar-sub{font-size:11px;color:var(--text3);margin-top:1px;font-family:'IBM Plex Mono',monospace}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.icon-btn{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s}
+.icon-btn:active{transform:scale(.92)}
+.btn-sync{background:var(--bg3);color:var(--text2)}
+.btn-add{background:var(--green);color:#000;font-weight:700;font-size:20px}
+.btn-sync.spinning{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.stats-row{display:flex;gap:8px;padding:14px 16px 0}
+.stat-card{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:11px 12px;display:flex;flex-direction:column;gap:2px}
+.stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+.stat-value{font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;line-height:1}
+.sv-action{color:var(--amber)}.sv-waiting{color:var(--blue)}.sv-done{color:var(--green)}
+.alert-banner{margin:12px 16px 0;background:var(--amber-dim);border:1px solid rgba(255,159,10,.3);border-radius:var(--card-r);padding:10px 14px;font-size:12px;color:var(--amber);display:flex;align-items:center;gap:8px}
+.tabs-wrap{padding:14px 16px 0}
+.tabs{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:3px;gap:3px}
+.tab{flex:1;padding:8px 4px;border-radius:9px;font-size:12px;font-weight:500;color:var(--text3);transition:all .2s;text-align:center;line-height:1.2}
+.tab.active{background:var(--bg3);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.list-wrap{padding:12px 16px calc(var(--safe-bot) + 24px);flex:1}
+.list-section{margin-bottom:20px}
+.section-label{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:0 2px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.job-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:13px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,background .15s;position:relative;overflow:hidden;animation:fadeIn .25s ease}
+.job-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+.job-card.action::before{background:var(--amber)}
+.job-card.waiting::before{background:var(--blue)}
+.job-card.done::before{background:var(--green)}
+.job-card:active{background:var(--bg3);border-color:var(--border2)}
+.job-card.alert{border-color:rgba(255,69,58,.4)}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px}
+.card-meta{display:flex;align-items:center;gap:6px}
+.cust-badge{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;background:var(--green-dim);color:var(--green);padding:2px 7px;border-radius:6px;white-space:nowrap}
+.job-code{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace}
+.status-chip{font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:4px}
+.chip-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.card-name{font-size:14px;font-weight:600;margin-bottom:3px;line-height:1.3}
+.card-detail{font-size:11px;color:var(--text2);margin-bottom:6px}
+.card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.card-tags{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.tag{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:500}
+.tag-po-yes{background:var(--green-dim);color:var(--green)}
+.tag-po-no{background:var(--amber-dim);color:var(--amber)}
+.tag-amount{color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:11px}
+.card-days{font-size:10px;color:var(--text3)}
+.card-days.warn{color:var(--red);font-weight:600}
+.empty{text-align:center;padding:48px 20px;color:var(--text3)}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.4}
+.empty-text{font-size:14px}
+.page{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-width:480px;margin:0 auto}
+.page.open{transform:translateX(0)}
+.page-topbar{padding:calc(var(--safe-top) + 12px) 16px 12px;background:rgba(15,15,17,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.back-btn{width:36px;height:36px;border-radius:10px;background:var(--bg3);color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.back-btn:active{opacity:.7}
+.page-title{font-size:15px;font-weight:700;flex:1}
+.edit-btn{padding:7px 14px;background:var(--blue);color:#fff;border-radius:10px;font-size:13px;font-weight:600}
+.edit-btn:active{opacity:.8}
+.page-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(var(--safe-bot) + 80px)}
+.detail-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);margin-bottom:12px;overflow:hidden}
+.detail-card-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);padding:10px 14px 8px;border-bottom:1px solid var(--border)}
+.detail-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)}
+.detail-row:last-child{border-bottom:none}
+.detail-key{font-size:12px;color:var(--text2)}
+.detail-val{font-size:13px;font-weight:500;text-align:right;max-width:60%}
+.detail-val.mono{font-family:'IBM Plex Mono',monospace}
+.detail-val.green{color:var(--green)}
+.detail-val.amber{color:var(--amber)}
+.detail-val.red{color:var(--red)}
+.progress-wrap{padding:14px}
+.progress-step{display:flex;gap:12px;align-items:flex-start}
+.step-left{display:flex;flex-direction:column;align-items:center}
+.step-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px}
+.step-dot.done{background:var(--green)}
+.step-dot.active{background:var(--amber);box-shadow:0 0 0 3px var(--amber-dim)}
+.step-dot.future{background:var(--bg3);border:1.5px solid var(--border2)}
+.step-line{width:1.5px;flex:1;min-height:14px;margin:2px 0;background:var(--border)}
+.step-line.done{background:var(--green)}
+.step-body{padding-top:2px;flex:1;padding-bottom:14px}
+.step-name{font-size:13px;line-height:1.3}
+.step-name.done{color:var(--text3)}
+.step-name.active{color:var(--text);font-weight:600}
+.step-name.future{color:var(--text3)}
+.step-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.detail-action-bar{position:sticky;bottom:0;background:linear-gradient(to top,var(--bg) 70%,transparent);padding:calc(var(--safe-bot) + 12px) 16px 16px}
+.next-step-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--green) 0%,var(--teal) 100%);color:#000;font-size:15px;font-weight:700;border-radius:14px;letter-spacing:-.2px;transition:all .15s;box-shadow:0 4px 16px rgba(52,199,89,.25)}
+.next-step-btn:active{transform:scale(.97);box-shadow:none}
+.next-step-btn:disabled{background:var(--bg3);color:var(--text3);box-shadow:none}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.overlay.open{display:flex}
+.modal-sheet{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90dvh;overflow-y:auto;padding:0 0 calc(var(--safe-bot) + 8px);animation:slideUp .3s cubic-bezier(.4,0,.2,1)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0}
+.modal-header{padding:14px 18px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+.modal-title{font-size:16px;font-weight:700}
+.modal-close{width:28px;height:28px;border-radius:8px;background:var(--bg3);color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:13px}
+.modal-body{padding:16px 18px}
+.form-group{margin-bottom:14px}
+.form-label{font-size:11px;color:var(--text2);margin-bottom:5px;display:block;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.form-input,.form-select{width:100%;padding:11px 13px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:14px;outline:none;transition:border-color .15s;-webkit-appearance:none;appearance:none}
+.form-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235A5A6A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.form-input:focus,.form-select:focus{border-color:var(--blue)}
+.form-input::placeholder{color:var(--text3)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.status-option{padding:9px 10px;border-radius:10px;border:1.5px solid var(--border2);background:var(--bg3);font-size:12px;color:var(--text2);text-align:left;line-height:1.3;transition:all .15s}
+.status-option.selected{border-color:var(--green);background:var(--green-dim);color:var(--text)}
+.status-option:active{opacity:.8}
+.form-actions{display:flex;gap:10px;margin-top:20px}
+.btn-primary{flex:2;padding:13px;background:var(--green);color:#000;border-radius:12px;font-size:14px;font-weight:700;transition:all .15s}
+.btn-primary:active{opacity:.85;transform:scale(.98)}
+.btn-secondary{flex:1;padding:13px;background:var(--bg3);color:var(--text2);border-radius:12px;font-size:14px;border:1px solid var(--border2)}
+.btn-secondary:active{opacity:.7}
+.missing-box{background:var(--red-dim);border:1px solid rgba(255,69,58,.3);border-radius:10px;padding:10px 13px;font-size:12px;color:var(--red);margin-top:6px}
+.toast{position:fixed;bottom:calc(var(--safe-bot) + 80px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:10px 18px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:rgba(52,199,89,.4);color:var(--green)}
+.toast.err{border-color:rgba(255,69,58,.4);color:var(--red)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.loading-bar{height:2px;background:linear-gradient(90deg,var(--green),var(--teal));position:fixed;top:0;left:0;z-index:9999;animation:loadBar 1.2s ease-in-out infinite}
+@keyframes loadBar{0%{width:0;opacity:1}60%{width:80%;opacity:1}100%{width:100%;opacity:0}}
 </style>
 </head>
 <body>
 <div class="app" id="app">
-
-  <!-- ─── MAIN PAGE ─────────────────────────── -->
   <div id="main-page">
     <div class="topbar">
       <div>
@@ -412,36 +159,22 @@ a { color: inherit; text-decoration: none; }
         <button class="icon-btn btn-add" onclick="openAddModal()">+</button>
       </div>
     </div>
-
     <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-label">ต้องทำ</div>
-        <div class="stat-value sv-action" id="st-action">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">รอลูกค้า</div>
-        <div class="stat-value sv-waiting" id="st-waiting">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">จบแล้ว</div>
-        <div class="stat-value sv-done" id="st-done">—</div>
-      </div>
+      <div class="stat-card"><div class="stat-label">ต้องทำ</div><div class="stat-value sv-action" id="st-action">—</div></div>
+      <div class="stat-card"><div class="stat-label">รอลูกค้า</div><div class="stat-value sv-waiting" id="st-waiting">—</div></div>
+      <div class="stat-card"><div class="stat-label">จบแล้ว</div><div class="stat-value sv-done" id="st-done">—</div></div>
     </div>
-
     <div id="alert-area"></div>
-
     <div class="tabs-wrap">
       <div class="tabs">
-        <button class="tab active" id="tab-todo"    onclick="setTab('todo')">ต้องทำ</button>
-        <button class="tab"        id="tab-waiting" onclick="setTab('waiting')">รอลูกค้า</button>
-        <button class="tab"        id="tab-done"    onclick="setTab('done')">จบแล้ว</button>
+        <button class="tab active" id="tab-todo" onclick="setTab('todo')">ต้องทำ</button>
+        <button class="tab" id="tab-waiting" onclick="setTab('waiting')">รอลูกค้า</button>
+        <button class="tab" id="tab-done" onclick="setTab('done')">จบแล้ว</button>
       </div>
     </div>
-
     <div class="list-wrap" id="job-list"></div>
   </div>
 
-  <!-- ─── DETAIL PAGE ───────────────────────── -->
   <div class="page" id="detail-page">
     <div class="page-topbar">
       <button class="back-btn" onclick="closePage()">‹</button>
@@ -454,7 +187,6 @@ a { color: inherit; text-decoration: none; }
     </div>
   </div>
 
-  <!-- ─── ADD/EDIT MODAL ────────────────────── -->
   <div class="overlay" id="modal-overlay" onclick="closeModal(event)">
     <div class="modal-sheet" id="modal-sheet">
       <div class="modal-handle"></div>
@@ -466,141 +198,100 @@ a { color: inherit; text-decoration: none; }
     </div>
   </div>
 
-  <!-- ─── Toast ─────────────────────────────── -->
   <div class="toast" id="toast"></div>
 </div>
 
 <script>
-// ══════════════════════════════════════════════════════════
-// CONFIG — แก้ตรงนี้หลัง deploy Apps Script
-// ══════════════════════════════════════════════════════════
 const API_URL = 'https://script.google.com/macros/s/AKfycbzA_SRLvxmWAPG7UQYkfQTxdgQscBXCn8ZfRRXYEN4uriKjzqaJ-DSll6Xi20x7NcXE/exec';
-// ↑ ใส่ URL ที่ได้จาก Apps Script > Deploy > Web App
 
-// ══════════════════════════════════════════════════════════
-// WORKFLOW STEPS
-// ══════════════════════════════════════════════════════════
 const STEPS = [
-  { id: 'รับงาน',                     label: 'รับงาน — รอข้อมูลจากลูกค้า',     group: 'waiting',  hasMissing: true },
-  { id: 'ส่งมุมกล้อง',                label: 'ส่งมุมกล้อง — รอลูกค้าเลือกมุม', group: 'waiting' },
-  { id: 'ส่งใบเสนอราคา',              label: 'ส่งใบเสนอราคา',                   group: 'action'  },
-  { id: 'ดำเนินการ ส่งภาพ draft',     label: 'ดำเนินการ ส่งภาพ Render',         group: 'action'  },
-  { id: 'รอลูกค้าคอมเม้น',            label: 'รอลูกค้าคอมเม้น',                 group: 'waiting'  },
-  { id: 'แก้ไขตามคอมเม้น',           label: 'แก้ไขตามคอมเม้น และส่ง',          group: 'action'  },
-  { id: 'ส่ง final',                  label: 'ส่ง Final แล้ว',                  group: 'action'  },
-  { id: 'วางบิล',                     label: 'วางบิล',                          group: 'action'  },
-  { id: 'เตรียมส่งเอกสาร',           label: 'เตรียมส่งเอกสาร',                 group: 'action'  },
-  { id: 'ส่งเอกสาร',                  label: 'ส่งเอกสารแล้ว',                   group: 'action'  },
-  { id: 'รับเงินแล้ว',               label: 'รับเช็ค / เงินโอนเข้าแล้ว ✓',     group: 'done'    },
+  { id: 'รับงาน',                 label: 'รับงาน — รอข้อมูลจากลูกค้า',      group: 'waiting', hasMissing: true },
+  { id: 'ส่งมุมกล้อง',            label: 'ส่งมุมกล้อง — รอลูกค้าเลือกมุม',  group: 'waiting', hasMissing: true },
+  { id: 'ส่งใบเสนอราคา',          label: 'ส่งใบเสนอราคา',                    group: 'action',  hasMissing: true },
+  { id: 'ดำเนินการ ส่งภาพ draft', label: 'ดำเนินการ ส่งภาพ Render',          group: 'action',  hasMissing: true },
+  { id: 'รอลูกค้าคอมเม้น',        label: 'รอลูกค้าคอมเม้น',                  group: 'waiting' },
+  { id: 'แก้ไขตามคอมเม้น',       label: 'แก้ไขตามคอมเม้น และส่ง',           group: 'action'  },
+  { id: 'ส่ง final',              label: 'ส่ง Final แล้ว',                   group: 'action'  },
+  { id: 'วางบิล',                 label: 'วางบิล',                           group: 'action'  },
+  { id: 'เตรียมส่งเอกสาร',       label: 'เตรียมส่งเอกสาร',                  group: 'action'  },
+  { id: 'ส่งเอกสาร',              label: 'ส่งเอกสารแล้ว',                    group: 'action'  },
+  { id: 'รับเงินแล้ว',           label: 'รับเช็ค / เงินโอนเข้าแล้ว ✓',      group: 'done'    },
 ];
-const STEP_IDS    = STEPS.map(s => s.id);
+const STEP_IDS  = STEPS.map(s => s.id);
 const DONE_STATUS = 'รับเงินแล้ว';
-const WAIT_IDS    = STEPS.filter(s => s.group === 'waiting').map(s => s.id);
-const ACTION_IDS  = STEPS.filter(s => s.group === 'action' || s.group === 'waiting').map(s => s.id);
+const WAIT_IDS  = STEPS.filter(s => s.group === 'waiting').map(s => s.id);
+const ACTION_IDS = STEPS.filter(s => s.group === 'action').map(s => s.id);
+const PRIORITY_STEPS = ['ส่งมุมกล้อง','ดำเนินการ ส่งภาพ draft','แก้ไขตามคอมเม้น'];
 
-// ── Status colors ────────────────────────────────────────
 const CHIP_CFG = {
-  'รับงาน':                     ['#2E2010','#FF9F0A','#FF9F0A'],
-  'ส่งมุมกล้อง':                ['#2E2010','#FF9F0A','#FF9F0A'],
-  'ส่งใบเสนอราคา':              ['#0A1F3A','#0A84FF','#0A84FF'],
-  'ดำเนินการ ส่งภาพ draft':     ['#1A3325','#34C759','#34C759'],
-  'รอลูกค้าคอมเม้น':            ['#2E2010','#FF9F0A','#FF9F0A'],
-  'แก้ไขตามคอมเม้น':           ['#1A3325','#34C759','#34C759'],
-  'ส่ง final':                  ['#0A1F3A','#0A84FF','#0A84FF'],
-  'วางบิล':                     ['#1E1030','#BF5AF2','#BF5AF2'],
-  'เตรียมส่งเอกสาร':           ['#1E1030','#BF5AF2','#BF5AF2'],
-  'ส่งเอกสาร':                  ['#1E1030','#BF5AF2','#BF5AF2'],
-  'รับเงินแล้ว':               ['#1A3325','#34C759','#34C759'],
+  'รับงาน':                 ['#2E2010','#FF9F0A','#FF9F0A'],
+  'ส่งมุมกล้อง':            ['#2E2010','#FF9F0A','#FF9F0A'],
+  'ส่งใบเสนอราคา':          ['#0A1F3A','#0A84FF','#0A84FF'],
+  'ดำเนินการ ส่งภาพ draft': ['#1A3325','#34C759','#34C759'],
+  'รอลูกค้าคอมเม้น':        ['#2E2010','#FF9F0A','#FF9F0A'],
+  'แก้ไขตามคอมเม้น':       ['#1A3325','#34C759','#34C759'],
+  'ส่ง final':              ['#0A1F3A','#0A84FF','#0A84FF'],
+  'วางบิล':                 ['#1E1030','#BF5AF2','#BF5AF2'],
+  'เตรียมส่งเอกสาร':       ['#1E1030','#BF5AF2','#BF5AF2'],
+  'ส่งเอกสาร':              ['#1E1030','#BF5AF2','#BF5AF2'],
+  'รับเงินแล้ว':           ['#1A3325','#34C759','#34C759'],
 };
 
-// ══════════════════════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════════════════════
 let jobs = [], currentTab = 'todo', selectedJob = null, doneSort = 'invoice';
 
-// ══════════════════════════════════════════════════════════
-// API
-// ══════════════════════════════════════════════════════════
 async function apiGet(action) {
   const r = await fetch(`${API_URL}?action=${action}`, { cache: 'no-cache' });
   return r.json();
 }
 async function apiPost(body) {
-  const r = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(body),
-    cache: 'no-cache'
-  });
+  const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(body), cache:'no-cache' });
   return r.json();
 }
 
-// ══════════════════════════════════════════════════════════
-// SYNC
-// ══════════════════════════════════════════════════════════
 async function syncJobs() {
   const btn = document.getElementById('sync-btn');
   btn.classList.add('spinning');
   showLoading();
   try {
     const data = await apiGet('getJobs');
-    if (data.jobs) {
-      jobs = data.jobs;
-      saveLocal(jobs);
-      renderAll();
-      toast('sync แล้ว ✓', 'ok');
-    }
-  } catch (e) {
-    toast('ไม่มีสัญญาณ — ใช้ข้อมูล cache', 'err');
+    if (data.jobs) { jobs = data.jobs; saveLocal(jobs); renderAll(); toast('sync แล้ว ✓','ok'); }
+  } catch(e) {
+    toast('ไม่มีสัญญาณ — ใช้ข้อมูล cache','err');
     const cached = loadLocal();
     if (cached) { jobs = cached; renderAll(); }
-  } finally {
-    btn.classList.remove('spinning');
-    hideLoading();
-  }
+  } finally { btn.classList.remove('spinning'); hideLoading(); }
 }
-
 function saveLocal(j) { try { localStorage.setItem('jf_jobs', JSON.stringify(j)); } catch(_){} }
 function loadLocal()  { try { return JSON.parse(localStorage.getItem('jf_jobs')); } catch(_) { return null; } }
 
-// ══════════════════════════════════════════════════════════
-// RENDER — Main List
-// ══════════════════════════════════════════════════════════
 function renderAll() {
-  const action  = jobs.filter(j => ACTION_IDS.includes(j.status) && !WAIT_IDS.includes(j.status) && j.status !== DONE_STATUS);
+  const action  = jobs.filter(j => ACTION_IDS.includes(j.status) && j.status !== DONE_STATUS);
   const waiting = jobs.filter(j => WAIT_IDS.includes(j.status));
   const done    = jobs.filter(j => j.status === DONE_STATUS);
 
-  // Sort action tab: priority steps first, then by step order
-  const PRIORITY_STEPS = ['ส่งมุมกล้อง', 'ดำเนินการ ส่งภาพ draft', 'แก้ไขตามคอมเม้น'];
-  action.sort((a, b) => {
-    const aPri = PRIORITY_STEPS.includes(a.status) ? 0 : 1;
-    const bPri = PRIORITY_STEPS.includes(b.status) ? 0 : 1;
-    if (aPri !== bPri) return aPri - bPri;
+  // Sort action: priority steps first
+  action.sort((a,b) => {
+    const ap = PRIORITY_STEPS.includes(a.status) ? 0 : 1;
+    const bp = PRIORITY_STEPS.includes(b.status) ? 0 : 1;
+    if (ap !== bp) return ap - bp;
     return STEP_IDS.indexOf(a.status) - STEP_IDS.indexOf(b.status);
   });
 
   document.getElementById('st-action').textContent  = action.length;
   document.getElementById('st-waiting').textContent = waiting.length;
   document.getElementById('st-done').textContent    = done.length;
-  document.getElementById('topbar-sub').textContent = `${jobs.length} งาน · อัพเดท ${timeAgo()}`;
+  document.getElementById('topbar-sub').textContent = `${jobs.length} งาน · ${timeAgo()}`;
 
-  // Alerts
   const alertArea = document.getElementById('alert-area');
   const stale = waiting.filter(j => j.status === 'รอลูกค้าคอมเม้น' && daysSince(j.status_date) >= 14);
   alertArea.innerHTML = stale.length ? `<div class="alert-banner">⚠️ ${stale.length} งาน รอคอมเม้นเกิน 14 วัน</div>` : '';
 
-  // Update tab labels
   document.getElementById('tab-todo').textContent    = `ต้องทำ (${action.length})`;
   document.getElementById('tab-waiting').textContent = `รอลูกค้า (${waiting.length})`;
   document.getElementById('tab-done').textContent    = `จบแล้ว (${done.length})`;
 
-  // Render list
   const list = document.getElementById('job-list');
-  let items;
-  if (currentTab === 'todo')    items = action;
-  else if (currentTab === 'waiting') items = waiting;
-  else items = done;
+  let items = currentTab === 'todo' ? action : currentTab === 'waiting' ? waiting : done;
 
   if (!items.length) {
     list.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">ไม่มีงาน</div></div>`;
@@ -610,22 +301,16 @@ function renderAll() {
   // Summary bar for done tab
   let summaryHtml = '';
   if (currentTab === 'done') {
-    const totalDone = done.reduce((sum, j) => sum + (Number(j.total) || 0), 0);
-    const totalAll  = jobs.reduce((sum, j) => sum + (Number(j.total) || 0), 0);
+    const totalDone = done.reduce((s,j) => s + (Number(j.total)||0), 0);
+    const totalAll  = jobs.reduce((s,j) => s + (Number(j.total)||0), 0);
     summaryHtml = `
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:14px 16px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--border)">
-          <div>
-            <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.06em;font-weight:600">รับเงินแล้ว</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px">${done.length} งาน</div>
-          </div>
+          <div><div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.06em;font-weight:600">รับเงินแล้ว</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${done.length} งาน</div></div>
           <div style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--green)">฿${totalDone.toLocaleString('th-TH')}</div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;font-weight:600">รายได้รวมทั้งหมด</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px">${jobs.length} งาน</div>
-          </div>
+          <div><div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;font-weight:600">รายได้รวมทั้งหมด</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${jobs.length} งาน</div></div>
           <div style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--text2)">฿${totalAll.toLocaleString('th-TH')}</div>
         </div>
       </div>
@@ -636,74 +321,40 @@ function renderAll() {
       </div>`;
   }
 
-  // Group by customer (waiting) or by status (todo) or sorted (done)
   const groups = {};
   if (currentTab === 'todo') {
     items.forEach(j => {
-      const grpKey = PRIORITY_STEPS.includes(j.status) ? '🔥 ' + j.status : j.status;
-      if (!groups[grpKey]) groups[grpKey] = [];
-      groups[grpKey].push(j);
+      const k = PRIORITY_STEPS.includes(j.status) ? '🔥 '+j.status : j.status;
+      if (!groups[k]) groups[k] = [];
+      groups[k].push(j);
     });
-    const sortedEntries = Object.entries(groups).sort((a, b) => {
-      const aStatus = a[0].replace('🔥 ', '');
-      const bStatus = b[0].replace('🔥 ', '');
-      const aPri = PRIORITY_STEPS.includes(aStatus) ? 0 : 1;
-      const bPri = PRIORITY_STEPS.includes(bStatus) ? 0 : 1;
-      if (aPri !== bPri) return aPri - bPri;
-      return STEP_IDS.indexOf(aStatus) - STEP_IDS.indexOf(bStatus);
+    const sorted = Object.entries(groups).sort((a,b) => {
+      const as = a[0].replace('🔥 ',''), bs = b[0].replace('🔥 ','');
+      const ap = PRIORITY_STEPS.includes(as)?0:1, bp = PRIORITY_STEPS.includes(bs)?0:1;
+      if (ap !== bp) return ap - bp;
+      return STEP_IDS.indexOf(as) - STEP_IDS.indexOf(bs);
     });
-    list.innerHTML = summaryHtml + sortedEntries.map(([grpKey, cjobs]) =>
-      `<div class="list-section">
-        <div class="section-label">${grpKey} <span style="color:var(--text3);font-weight:400">${cjobs.length} งาน</span></div>
-        ${cjobs.map(j => jobCard(j)).join('')}
-      </div>`
+    list.innerHTML = summaryHtml + sorted.map(([k,cj]) =>
+      `<div class="list-section"><div class="section-label">${k} <span style="color:var(--text3);font-weight:400">${cj.length} งาน</span></div>${cj.map(j=>jobCard(j)).join('')}</div>`
     ).join('');
   } else if (currentTab === 'done') {
     if (doneSort === 'invoice') {
-      // Sort by invoice_no descending (latest first)
-      const sorted = [...items].sort((a, b) => {
-        const av = String(a.invoice_no || '').replace(/\D/g,'') || '0';
-        const bv = String(b.invoice_no || '').replace(/\D/g,'') || '0';
-        return Number(bv) - Number(av);
-      });
-      list.innerHTML = summaryHtml + `<div class="list-section">
-        <div class="section-label">เรียงตาม Invoice ล่าสุด</div>
-        ${sorted.map(j => jobCard(j)).join('')}
-      </div>`;
+      const s = [...items].sort((a,b) => (Number(String(b.invoice_no||'').replace(/\D/g,'')||0)) - (Number(String(a.invoice_no||'').replace(/\D/g,'')||0)));
+      list.innerHTML = summaryHtml + `<div class="list-section"><div class="section-label">เรียงตาม Invoice ล่าสุด</div>${s.map(j=>jobCard(j)).join('')}</div>`;
     } else if (doneSort === 'tax') {
-      // Sort by tax_no descending
-      const sorted = [...items].sort((a, b) => {
-        const av = String(a.tax_no || '').replace(/\D/g,'') || '0';
-        const bv = String(b.tax_no || '').replace(/\D/g,'') || '0';
-        return Number(bv) - Number(av);
-      });
-      list.innerHTML = summaryHtml + `<div class="list-section">
-        <div class="section-label">เรียงตามใบกำกับภาษีล่าสุด</div>
-        ${sorted.map(j => jobCard(j)).join('')}
-      </div>`;
+      const s = [...items].sort((a,b) => (Number(String(b.tax_no||'').replace(/\D/g,'')||0)) - (Number(String(a.tax_no||'').replace(/\D/g,'')||0)));
+      list.innerHTML = summaryHtml + `<div class="list-section"><div class="section-label">เรียงตามใบกำกับภาษีล่าสุด</div>${s.map(j=>jobCard(j)).join('')}</div>`;
     } else {
-      // Group by customer
-      items.forEach(j => { const c = j.cust || '?'; if (!groups[c]) groups[c] = []; groups[c].push(j); });
-      // Sort within each group by invoice_no desc
-      Object.values(groups).forEach(g => g.sort((a, b) => {
-        const av = String(a.invoice_no || '').replace(/\D/g,'') || '0';
-        const bv = String(b.invoice_no || '').replace(/\D/g,'') || '0';
-        return Number(bv) - Number(av);
-      }));
-      list.innerHTML = summaryHtml + Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([cust, cjobs]) =>
-        `<div class="list-section">
-          <div class="section-label">${cust} <span style="color:var(--text3);font-weight:400">${cjobs.length} งาน</span></div>
-          ${cjobs.map(j => jobCard(j)).join('')}
-        </div>`
+      items.forEach(j => { const c = j.cust||'?'; if (!groups[c]) groups[c]=[]; groups[c].push(j); });
+      Object.values(groups).forEach(g => g.sort((a,b) => (Number(String(b.invoice_no||'').replace(/\D/g,'')||0)) - (Number(String(a.invoice_no||'').replace(/\D/g,'')||0))));
+      list.innerHTML = summaryHtml + Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([c,cj]) =>
+        `<div class="list-section"><div class="section-label">${c} <span style="color:var(--text3);font-weight:400">${cj.length} งาน</span></div>${cj.map(j=>jobCard(j)).join('')}</div>`
       ).join('');
     }
   } else {
-    items.forEach(j => { const c = j.cust || '?'; if (!groups[c]) groups[c] = []; groups[c].push(j); });
-    list.innerHTML = summaryHtml + Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([cust, cjobs]) =>
-      `<div class="list-section">
-        <div class="section-label">${cust}</div>
-        ${cjobs.map(j => jobCard(j)).join('')}
-      </div>`
+    items.forEach(j => { const c = j.cust||'?'; if (!groups[c]) groups[c]=[]; groups[c].push(j); });
+    list.innerHTML = summaryHtml + Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([c,cj]) =>
+      `<div class="list-section"><div class="section-label">${c}</div>${cj.map(j=>jobCard(j)).join('')}</div>`
     ).join('');
   }
 }
@@ -714,52 +365,28 @@ function jobCard(j) {
   const days = daysSince(j.status_date);
   const isAlert = j.status === 'รอลูกค้าคอมเม้น' && days >= 14;
   const grp  = step.group;
-  const isDone = j.status === DONE_STATUS;
 
-  const chipHtml = `<span class="status-chip" style="background:${cfg[0]};color:${cfg[1]}">
-    <span class="chip-dot" style="background:${cfg[2]}"></span>${j.status}
-  </span>`;
-
-  const po = j.po_status === 'ออกแล้ว'
-    ? `<span class="tag tag-po-yes">PO ✓</span>`
-    : `<span class="tag tag-po-no">รอ PO</span>`;
-
+  const chipHtml = `<span class="status-chip" style="background:${cfg[0]};color:${cfg[1]}"><span class="chip-dot" style="background:${cfg[2]}"></span>${j.status}</span>`;
+  const po = j.po_status === 'ออกแล้ว' ? `<span class="tag tag-po-yes">PO ✓</span>` : `<span class="tag tag-po-no">รอ PO</span>`;
   const amt = j.total ? `<span class="tag-amount">฿${Number(j.total).toLocaleString('th-TH')}</span>` : '';
   const daysHtml = days > 0 ? `<span class="card-days ${isAlert?'warn':''}">${isAlert?'⚠️ ':''}${days} วัน</span>` : '';
 
-  // Extra doc numbers - show on all tabs
-  const docInfo = `
-    <div style="margin-top:6px;display:flex;flex-direction:column;gap:3px">
-      ${j.quotation_no ? `<div style="font-size:11px;color:var(--text3)">ใบเสนอราคา <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.quotation_no}</span></div>` : ''}
-      ${j.invoice_no   ? `<div style="font-size:11px;color:var(--text3)">Invoice <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.invoice_no}</span></div>` : ''}
-      ${j.tax_no       ? `<div style="font-size:11px;color:var(--text3)">ใบกำกับภาษี <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.tax_no}</span></div>` : ''}
-    </div>`;
-
-  // Extra info for done tab (same as docInfo but kept for clarity)
-  const doneInfo = isDone ? docInfo : '';
+  const docInfo = `<div style="margin-top:6px;display:flex;flex-direction:column;gap:3px">
+    ${j.quotation_no ? `<div style="font-size:11px;color:var(--text3)">ใบเสนอราคา <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.quotation_no}</span></div>` : ''}
+    ${j.invoice_no   ? `<div style="font-size:11px;color:var(--text3)">Invoice <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.invoice_no}</span></div>` : ''}
+    ${j.tax_no       ? `<div style="font-size:11px;color:var(--text3)">ใบกำกับภาษี <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.tax_no}</span></div>` : ''}
+  </div>`;
 
   return `<div class="job-card ${grp} ${isAlert?'alert':''}" onclick="openDetail('${j.job_id}')">
-    <div class="card-top">
-      <div class="card-meta">
-        <span class="cust-badge">${j.cust||'?'}</span>
-        <span class="job-code">${j.job_code||''}</span>
-      </div>
-      ${chipHtml}
-    </div>
+    <div class="card-top"><div class="card-meta"><span class="cust-badge">${j.cust||'?'}</span><span class="job-code">${j.job_code||''}</span></div>${chipHtml}</div>
     <div class="card-name">${j.project_name||'(ไม่มีชื่อ)'}</div>
     <div class="card-detail">${j.contact ? '👤 '+j.contact : ''}</div>
     ${j.missing_info ? `<div class="missing-box">ขาด: ${j.missing_info}</div>` : ''}
     ${docInfo}
-    <div class="card-footer">
-      <div class="card-tags">${po}${amt}</div>
-      ${daysHtml}
-    </div>
+    <div class="card-footer"><div class="card-tags">${po}${amt}</div>${daysHtml}</div>
   </div>`;
 }
 
-// ══════════════════════════════════════════════════════════
-// DETAIL PAGE
-// ══════════════════════════════════════════════════════════
 function openDetail(jobId) {
   selectedJob = jobs.find(j => j.job_id === jobId);
   if (!selectedJob) return;
@@ -775,59 +402,45 @@ function renderDetail() {
   const j = selectedJob;
   if (!j) return;
   document.getElementById('dp-title').textContent = j.project_name || '(ไม่มีชื่อ)';
-
   const ci = STEP_IDS.indexOf(j.status);
   const isDone = j.status === DONE_STATUS;
   const nextStep = isDone ? null : STEPS[ci + 1];
 
-  // Next button
   const nb = document.getElementById('next-btn');
-  if (isDone) {
-    nb.textContent = '✓ จบแล้ว'; nb.disabled = true;
-  } else if (nextStep) {
-    nb.textContent = `→ ${nextStep.label}`; nb.disabled = false;
-  } else {
-    nb.textContent = '—'; nb.disabled = true;
-  }
+  if (isDone) { nb.textContent = '✓ จบแล้ว'; nb.disabled = true; }
+  else if (nextStep) { nb.textContent = `→ ${nextStep.label}`; nb.disabled = false; }
+  else { nb.textContent = '—'; nb.disabled = true; }
 
-  // Scroll content
-  const scroll = document.getElementById('dp-scroll');
-  scroll.innerHTML = `
-    <!-- Info Card -->
+  document.getElementById('dp-scroll').innerHTML = `
     <div class="detail-card">
       <div class="detail-card-title">ข้อมูลงาน</div>
       ${row('ลูกค้า', `${j.cust||'—'} ${j.job_code||''}`)}
       ${row('ชื่อโครงการ', j.project_name||'—')}
       ${row('ผู้ติดต่อ', j.contact||'—')}
       ${row('วันที่รับงาน', j.receive_date ? fmtDateTH(j.receive_date) : '—')}
-      ${row('ใบเสนอราคา', j.quotation_no||'—', 'mono')}
-      ${row('ราคารวม', j.total ? '฿'+Number(j.total).toLocaleString('th-TH') : '—', 'mono green')}
-      ${row('สถานะ PO', j.po_status||'ยังไม่ออก', j.po_status==='ออกแล้ว' ? 'green' : 'amber')}
+      ${row('ใบเสนอราคา', j.quotation_no||'—','mono')}
+      ${row('ราคารวม', j.total ? '฿'+Number(j.total).toLocaleString('th-TH') : '—','mono green')}
+      ${row('สถานะ PO', j.po_status||'ยังไม่ออก', j.po_status==='ออกแล้ว'?'green':'amber')}
       ${j.missing_info ? `<div class="detail-row"><span class="detail-key">ข้อมูลที่ขาด</span><span class="detail-val red">${j.missing_info}</span></div>` : ''}
     </div>
-
-    <!-- Finance Card -->
     <div class="detail-card">
       <div class="detail-card-title">การเงิน & เอกสาร</div>
-      ${row('เลข Invoice', j.invoice_no||'—', 'mono')}
-      ${row('เลขที่ใบกำกับภาษี', j.tax_no||'—', 'mono')}
+      ${row('เลข Invoice', j.invoice_no||'—','mono')}
+      ${row('เลขที่ใบกำกับภาษี', j.tax_no||'—','mono')}
       ${row('วางบิลวันที่', j.invoice_date ? fmtDateTH(j.invoice_date) : '—')}
       ${row('รับเงินวันที่', j.payment_date ? fmtDateTH(j.payment_date) : '—', j.payment_date?'green':'')}
       ${row('ทวิ 50', j.wht||'—', j.wht==='ครบแล้ว'?'green':'')}
     </div>
-
-    <!-- Progress -->
     <div class="detail-card">
       <div class="detail-card-title">ขั้นตอนงาน (${ci+1}/${STEPS.length})</div>
       <div class="progress-wrap">
-        ${STEPS.map((s, i) => {
-          const isDn = i < ci, isAc = i === ci, isFu = i > ci;
-          const cls  = isDn ? 'done' : isAc ? 'active' : 'future';
-          const icon = isDn ? '✓' : isAc ? '●' : '';
+        ${STEPS.map((s,i) => {
+          const isDn=i<ci, isAc=i===ci;
+          const cls = isDn?'done':isAc?'active':'future';
           return `<div class="progress-step">
             <div class="step-left">
-              <div class="step-dot ${cls}">${icon}</div>
-              ${i < STEPS.length-1 ? `<div class="step-line ${isDn?'done':''}"></div>` : ''}
+              <div class="step-dot ${cls}">${isDn?'✓':isAc?'●':''}</div>
+              ${i<STEPS.length-1?`<div class="step-line ${isDn?'done':''}"></div>`:''}
             </div>
             <div class="step-body">
               <div class="step-name ${cls}">${s.label}</div>
@@ -836,18 +449,13 @@ function renderDetail() {
           </div>`;
         }).join('')}
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
 function row(key, val, cls='') {
-  return `<div class="detail-row">
-    <span class="detail-key">${key}</span>
-    <span class="detail-val ${cls}">${val}</span>
-  </div>`;
+  return `<div class="detail-row"><span class="detail-key">${key}</span><span class="detail-val ${cls}">${val}</span></div>`;
 }
 
-// ── Next Step ────────────────────────────────────────────
 async function doNextStep() {
   const j = selectedJob;
   if (!j) return;
@@ -855,29 +463,25 @@ async function doNextStep() {
   if (ci < 0 || ci >= STEPS.length - 1) return;
   const nextStatus = STEP_IDS[ci + 1];
 
-  // Confirm if jumping to billing — check PO
   if (nextStatus === 'วางบิล' && j.po_status !== 'ออกแล้ว') {
     if (!confirm('PO ยังไม่ออก — ต้องการไปขั้น "วางบิล" เลยไหม?')) return;
   }
 
   showLoading();
   try {
-    const res = await apiPost({ action: 'updateJob', job_id: j.job_id, status: nextStatus });
+    const res = await apiPost({ action:'updateJob', job_id:j.job_id, status:nextStatus });
     if (res.ok) {
+      closePage();
       j.status = nextStatus;
       j.status_date = new Date().toISOString().slice(0,10);
       saveLocal(jobs);
-      renderAll();
-      renderDetail();
-      toast(`อัพเดทเป็น "${nextStatus}" แล้ว ✓`, 'ok');
-    } else toast('เกิดข้อผิดพลาด: ' + (res.error||''), 'err');
-  } catch(_) { toast('ไม่มีสัญญาณ', 'err'); }
+      await syncJobs();
+      toast(`อัพเดทเป็น "${nextStatus}" แล้ว ✓`,'ok');
+    } else toast('เกิดข้อผิดพลาด: '+(res.error||''),'err');
+  } catch(_) { toast('ไม่มีสัญญาณ','err'); }
   hideLoading();
 }
 
-// ══════════════════════════════════════════════════════════
-// MODALS
-// ══════════════════════════════════════════════════════════
 function openAddModal() {
   document.getElementById('modal-title').textContent = 'เพิ่มงานใหม่';
   document.getElementById('modal-body').innerHTML = addForm();
@@ -896,78 +500,41 @@ function closeModal(e) {
 function addForm() {
   return `
     <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Cust. *</label>
-        <input class="form-input" id="f-cust" placeholder="AP / SAN / LH">
-      </div>
-      <div class="form-group">
-        <label class="form-label">รหัสงาน *</label>
-        <input class="form-input" id="f-jcode" placeholder="2601">
-      </div>
+      <div class="form-group"><label class="form-label">Cust. *</label><input class="form-input" id="f-cust" placeholder="AP / SAN / LH"></div>
+      <div class="form-group"><label class="form-label">รหัสงาน *</label><input class="form-input" id="f-jcode" placeholder="2601"></div>
     </div>
-    <div class="form-group">
-      <label class="form-label">ชื่อโครงการ *</label>
-      <input class="form-input" id="f-name" placeholder="เช่น Pleno Town เอกชัย">
-    </div>
-    <div class="form-group">
-      <label class="form-label">ชื่อผู้ติดต่อ</label>
-      <input class="form-input" id="f-contact" placeholder="ชื่อ Contact">
-    </div>
+    <div class="form-group"><label class="form-label">ชื่อโครงการ *</label><input class="form-input" id="f-name" placeholder="เช่น Pleno Town เอกชัย"></div>
+    <div class="form-group"><label class="form-label">ชื่อผู้ติดต่อ</label><input class="form-input" id="f-contact" placeholder="ชื่อ Contact"></div>
     <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">วันที่รับงาน</label>
-        <input class="form-input" id="f-recvdate" type="date" value="${new Date().toISOString().slice(0,10)}">
-      </div>
-      <div class="form-group">
-        <label class="form-label">มูลค่า (บาท)</label>
-        <input class="form-input" id="f-total" type="number" placeholder="0">
-      </div>
+      <div class="form-group"><label class="form-label">วันที่รับงาน</label><input class="form-input" id="f-recvdate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="form-group"><label class="form-label">มูลค่า (บาท)</label><input class="form-input" id="f-total" type="number" placeholder="0"></div>
     </div>
-      <div class="form-group">
-        <label class="form-label">สถานะ PO</label>
-        <select class="form-select" id="f-po">
-          <option value="">ยังไม่ออก</option>
-          <option value="ออกแล้ว">ออกแล้ว</option>
-        </select>
-      </div>
-    </div>
+    <div class="form-group"><label class="form-label">สถานะ PO</label><select class="form-select" id="f-po"><option value="">ยังไม่ออก</option><option value="ออกแล้ว">ออกแล้ว</option></select></div>
     <div class="form-group">
       <label class="form-label">สถานะเริ่มต้น</label>
       <div class="status-grid" id="f-status-grid">
-        ${STEPS.slice(0,4).map((s,i) => `
-          <button class="status-option ${i===0?'selected':''}" onclick="selectStatus(this,'${s.id}')">${s.label}</button>
-        `).join('')}
+        ${STEPS.slice(0,4).map((s,i) => `<button class="status-option ${i===0?'selected':''}" onclick="selectStatus(this,'${s.id}')">${s.label}</button>`).join('')}
       </div>
       <input type="hidden" id="f-status" value="${STEPS[0].id}">
     </div>
-    <div class="form-group" id="f-missing-wrap" style="display:${STEPS[0].hasMissing?'block':'none'}">
+    <div class="form-group" id="f-missing-wrap">
       <label class="form-label">ข้อมูลที่ยังขาด</label>
       <input class="form-input" id="f-missing" placeholder="เช่น ยังขาด CAD, แบบต้นไม้">
     </div>
-    <div class="form-group">
-      <label class="form-label">หมายเหตุ</label>
-      <input class="form-input" id="f-remark">
-    </div>
+    <div class="form-group"><label class="form-label">หมายเหตุ</label><input class="form-input" id="f-remark"></div>
     <div class="form-actions">
       <button class="btn-secondary" onclick="closeModal()">ยกเลิก</button>
       <button class="btn-primary" onclick="submitAdd()">เพิ่มงาน</button>
-    </div>
-  `;
+    </div>`;
 }
 
 function editForm(j) {
   if (!j) return '';
-  const currentIdx = STEP_IDS.indexOf(j.status);
-  const hasMissing = STEPS[currentIdx]?.hasMissing;
+  const ci = STEP_IDS.indexOf(j.status);
+  const hasMissing = STEPS[ci]?.hasMissing;
   return `
-    <div class="form-group">
-      <label class="form-label">ชื่อโครงการ</label>
-      <input class="form-input" id="e-name" value="${escHtml(j.project_name||'')}">
-    </div>
-    <div class="form-group">
-      <label class="form-label">ผู้ติดต่อ</label>
-      <input class="form-input" id="e-contact" value="${escHtml(j.contact||'')}">
-    </div>
+    <div class="form-group"><label class="form-label">ชื่อโครงการ</label><input class="form-input" id="e-name" value="${escHtml(j.project_name||'')}"></div>
+    <div class="form-group"><label class="form-label">ผู้ติดต่อ</label><input class="form-input" id="e-contact" value="${escHtml(j.contact||'')}"></div>
     <div class="form-group">
       <label class="form-label">สถานะงาน</label>
       <select class="form-select" id="e-status" onchange="toggleMissingFromEdit()">
@@ -979,57 +546,22 @@ function editForm(j) {
       <input class="form-input" id="e-missing" value="${escHtml(j.missing_info||'')}" placeholder="เช่น ยังขาด CAD">
     </div>
     <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">วันที่รับงาน</label>
-        <input class="form-input" id="e-recvdate" type="date" value="${j.receive_date||''}">
-      </div>
-      <div class="form-group">
-        <label class="form-label">มูลค่า (บาท)</label>
-        <input class="form-input" id="e-total" type="number" value="${j.total||''}">
-      </div>
+      <div class="form-group"><label class="form-label">วันที่รับงาน</label><input class="form-input" id="e-recvdate" type="date" value="${j.receive_date||''}"></div>
+      <div class="form-group"><label class="form-label">มูลค่า (บาท)</label><input class="form-input" id="e-total" type="number" value="${j.total||''}"></div>
     </div>
-      <div class="form-group">
-        <label class="form-label">สถานะ PO</label>
-        <select class="form-select" id="e-po">
-          <option value="" ${j.po_status!=='ออกแล้ว'?'selected':''}>ยังไม่ออก</option>
-          <option value="ออกแล้ว" ${j.po_status==='ออกแล้ว'?'selected':''}>ออกแล้ว</option>
-        </select>
-      </div>
-    </div>
+    <div class="form-group"><label class="form-label">สถานะ PO</label><select class="form-select" id="e-po"><option value="" ${j.po_status!=='ออกแล้ว'?'selected':''}>ยังไม่ออก</option><option value="ออกแล้ว" ${j.po_status==='ออกแล้ว'?'selected':''}>ออกแล้ว</option></select></div>
+    <div class="form-group"><label class="form-label">เลข Invoice</label><input class="form-input" id="e-invno" value="${escHtml(j.invoice_no||'')}" placeholder="เช่น INV2026001"></div>
+    <div class="form-group"><label class="form-label">เลขที่ใบกำกับภาษี</label><input class="form-input" id="e-taxno" value="${escHtml(j.tax_no||'')}" placeholder="เช่น IV2026001"></div>
     <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">วางบิลวันที่</label>
-        <input class="form-input" id="e-invdate" type="date" value="${j.invoice_date||''}">
-      </div>
-      <div class="form-group">
-        <label class="form-label">รับเงินวันที่</label>
-        <input class="form-input" id="e-paydate" type="date" value="${j.payment_date||''}">
-      </div>
+      <div class="form-group"><label class="form-label">วางบิลวันที่</label><input class="form-input" id="e-invdate" type="date" value="${j.invoice_date||''}"></div>
+      <div class="form-group"><label class="form-label">รับเงินวันที่</label><input class="form-input" id="e-paydate" type="date" value="${j.payment_date||''}"></div>
     </div>
-    <div class="form-group">
-      <label class="form-label">เลข Invoice</label>
-      <input class="form-input" id="e-invno" value="${escHtml(j.invoice_no||'')}" placeholder="เช่น INV2026001">
-    </div>
-    <div class="form-group">
-      <label class="form-label">เลขที่ใบกำกับภาษี</label>
-      <input class="form-input" id="e-taxno" value="${escHtml(j.tax_no||'')}" placeholder="เช่น IV2026001">
-    </div>
-    <div class="form-group">
-      <label class="form-label">ทวิ 50</label>
-      <select class="form-select" id="e-wht">
-        <option value="" ${!j.wht?'selected':''}>ยัง</option>
-        <option value="ครบแล้ว" ${j.wht==='ครบแล้ว'?'selected':''}>ครบแล้ว</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">หมายเหตุ</label>
-      <input class="form-input" id="e-remark" value="${escHtml(j.remark||'')}">
-    </div>
+    <div class="form-group"><label class="form-label">ทวิ 50</label><select class="form-select" id="e-wht"><option value="" ${!j.wht?'selected':''}>ยัง</option><option value="ครบแล้ว" ${j.wht==='ครบแล้ว'?'selected':''}>ครบแล้ว</option></select></div>
+    <div class="form-group"><label class="form-label">หมายเหตุ</label><input class="form-input" id="e-remark" value="${escHtml(j.remark||'')}"></div>
     <div class="form-actions">
       <button class="btn-secondary" onclick="closeModal()">ยกเลิก</button>
       <button class="btn-primary" onclick="submitEdit()">💾 บันทึก</button>
-    </div>
-  `;
+    </div>`;
 }
 
 function selectStatus(btn, statusId) {
@@ -1050,28 +582,22 @@ function toggleMissingFromEdit() {
 async function submitAdd() {
   const cust = document.getElementById('f-cust').value.trim().toUpperCase();
   const name = document.getElementById('f-name').value.trim();
-  if (!cust || !name) { toast('กรุณากรอก Cust. และชื่อโครงการ', 'err'); return; }
-
+  if (!cust || !name) { toast('กรุณากรอก Cust. และชื่อโครงการ','err'); return; }
   showLoading();
   try {
     const res = await apiPost({
-      action: 'addJob',
-      cust, job_code: document.getElementById('f-jcode').value.trim(),
-      project_name: name,
-      contact: document.getElementById('f-contact').value.trim(),
-      receive_date: document.getElementById('f-recvdate').value,
-      total: document.getElementById('f-total').value || 0,
-      po_status: document.getElementById('f-po').value,
-      status: document.getElementById('f-status').value,
-      missing_info: document.getElementById('f-missing')?.value?.trim() || '',
-      remark: document.getElementById('f-remark').value.trim(),
+      action:'addJob', cust, job_code:document.getElementById('f-jcode').value.trim(),
+      project_name:name, contact:document.getElementById('f-contact').value.trim(),
+      receive_date:document.getElementById('f-recvdate').value,
+      total:document.getElementById('f-total').value||0,
+      po_status:document.getElementById('f-po').value,
+      status:document.getElementById('f-status').value,
+      missing_info:document.getElementById('f-missing')?.value?.trim()||'',
+      remark:document.getElementById('f-remark').value.trim(),
     });
-    if (res.ok) {
-      closeModal();
-      await syncJobs();
-      toast('เพิ่มงานแล้ว ✓', 'ok');
-    } else toast('Error: ' + (res.error||''), 'err');
-  } catch(_) { toast('ไม่มีสัญญาณ', 'err'); }
+    if (res.ok) { closeModal(); await syncJobs(); toast('เพิ่มงานแล้ว ✓','ok'); }
+    else toast('Error: '+(res.error||''),'err');
+  } catch(_) { toast('ไม่มีสัญญาณ','err'); }
   hideLoading();
 }
 
@@ -1081,35 +607,31 @@ async function submitEdit() {
   showLoading();
   try {
     const res = await apiPost({
-      action: 'updateJob',
-      job_id: j.job_id,
-      project_name: document.getElementById('e-name').value.trim(),
-      contact: document.getElementById('e-contact').value.trim(),
-      status: document.getElementById('e-status').value,
-      missing_info: document.getElementById('e-missing')?.value?.trim() || '',
-      receive_date: document.getElementById('e-recvdate').value,
-      total: document.getElementById('e-total').value || j.total,
-      po_status: document.getElementById('e-po').value,
-      invoice_date: document.getElementById('e-invdate').value,
-      payment_date: document.getElementById('e-paydate').value,
-      invoice_no: document.getElementById('e-invno').value.trim(),
-      tax_no: document.getElementById('e-taxno').value.trim(),
-      wht: document.getElementById('e-wht').value,
-      remark: document.getElementById('e-remark').value.trim(),
+      action:'updateJob', job_id:j.job_id,
+      project_name:document.getElementById('e-name').value.trim(),
+      contact:document.getElementById('e-contact').value.trim(),
+      status:document.getElementById('e-status').value,
+      missing_info:document.getElementById('e-missing')?.value?.trim()||'',
+      receive_date:document.getElementById('e-recvdate').value,
+      total:document.getElementById('e-total').value||j.total,
+      po_status:document.getElementById('e-po').value,
+      invoice_no:document.getElementById('e-invno').value.trim(),
+      tax_no:document.getElementById('e-taxno').value.trim(),
+      invoice_date:document.getElementById('e-invdate').value,
+      payment_date:document.getElementById('e-paydate').value,
+      wht:document.getElementById('e-wht').value,
+      remark:document.getElementById('e-remark').value.trim(),
     });
     if (res.ok) {
       closeModal();
       closePage();
       await syncJobs();
-      toast('บันทึกแล้ว ✓', 'ok');
-    } else toast('Error: ' + (res.error||''), 'err');
-  } catch(_) { toast('ไม่มีสัญญาณ', 'err'); }
+      toast('บันทึกแล้ว ✓','ok');
+    } else toast('Error: '+(res.error||''),'err');
+  } catch(_) { toast('ไม่มีสัญญาณ','err'); }
   hideLoading();
 }
 
-// ══════════════════════════════════════════════════════════
-// TAB
-// ══════════════════════════════════════════════════════════
 function setTab(t) {
   currentTab = t;
   ['todo','waiting','done'].forEach(id => {
@@ -1118,29 +640,21 @@ function setTab(t) {
   renderAll();
 }
 
-// ══════════════════════════════════════════════════════════
-// UTILS
-// ══════════════════════════════════════════════════════════
-function daysSince(d) {
-  if (!d) return 0;
-  return Math.floor((Date.now() - new Date(d)) / 86400000);
-}
-function timeAgo() { return new Date().toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' }); }
+function daysSince(d) { if (!d) return 0; return Math.floor((Date.now()-new Date(d))/86400000); }
+function timeAgo() { return new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}); }
 function fmtDateTH(d) {
   if (!d) return '—';
   const dt = new Date(d);
   if (isNaN(dt)) return String(d);
-  return dt.toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'2-digit' });
+  return dt.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
 }
 function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function toast(msg, type='') {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show ' + type;
+  t.textContent = msg; t.className = 'toast show '+type;
   setTimeout(() => t.className = 'toast', 2800);
 }
-
 let loadingEl;
 function showLoading() {
   if (!loadingEl) { loadingEl = document.createElement('div'); loadingEl.className = 'loading-bar'; document.body.appendChild(loadingEl); }
@@ -1148,14 +662,9 @@ function showLoading() {
 }
 function hideLoading() { if (loadingEl) loadingEl.style.display = 'none'; }
 
-// ══════════════════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
-  // Load cache first (instant)
   const cached = loadLocal();
   if (cached) { jobs = cached; renderAll(); }
-  // Then sync from server
   syncJobs();
 });
 </script>

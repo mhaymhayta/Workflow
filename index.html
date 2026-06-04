@@ -202,7 +202,7 @@ input,select,textarea{font-family:inherit}
 </div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbzA_SRLvxmWAPG7UQYkfQTxdgQscBXCn8ZfRRXYEN4uriKjzqaJ-DSll6Xi20x7NcXE/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxxOqIpCjyE7JDGyI_T7is3IUSZ9FPwMRV9Jt4X_I4kdn-FoEBAX_2kh6D2c0pZLKzaVA/exec';
 
 const STEPS = [
   { id: 'รับงาน',                 label: 'รับงาน — รอข้อมูลจากลูกค้า',      group: 'waiting', hasMissing: true },
@@ -553,8 +553,14 @@ function editForm(j) {
     <div class="form-group"><label class="form-label">เลข Invoice</label><input class="form-input" id="e-invno" value="${escHtml(j.invoice_no||'')}" placeholder="เช่น INV2026001"></div>
     <div class="form-group"><label class="form-label">เลขที่ใบกำกับภาษี</label><input class="form-input" id="e-taxno" value="${escHtml(j.tax_no||'')}" placeholder="เช่น IV2026001"></div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">วางบิลวันที่</label><input class="form-input" id="e-invdate" type="date" value="${j.invoice_date||''}"></div>
-      <div class="form-group"><label class="form-label">รับเงินวันที่</label><input class="form-input" id="e-paydate" type="date" value="${j.payment_date||''}"></div>
+      <div class="form-group">
+        <label class="form-label">วางบิลวันที่ <button type="button" onclick="document.getElementById('e-invdate').value=''" style="font-size:10px;color:var(--red);background:var(--red-dim);border:none;border-radius:6px;padding:2px 7px;cursor:pointer;margin-left:4px">ล้าง</button></label>
+        <input class="form-input" id="e-invdate" type="date" value="${j.invoice_date||''}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">รับเงินวันที่ <button type="button" onclick="document.getElementById('e-paydate').value=''" style="font-size:10px;color:var(--red);background:var(--red-dim);border:none;border-radius:6px;padding:2px 7px;cursor:pointer;margin-left:4px">ล้าง</button></label>
+        <input class="form-input" id="e-paydate" type="date" value="${j.payment_date||''}">
+      </div>
     </div>
     <div class="form-group"><label class="form-label">ทวิ 50</label><select class="form-select" id="e-wht"><option value="" ${!j.wht?'selected':''}>ยัง</option><option value="ครบแล้ว" ${j.wht==='ครบแล้ว'?'selected':''}>ครบแล้ว</option></select></div>
     <div class="form-group"><label class="form-label">หมายเหตุ</label><input class="form-input" id="e-remark" value="${escHtml(j.remark||'')}"></div>
@@ -617,8 +623,8 @@ async function submitEdit() {
       po_status:document.getElementById('e-po').value,
       invoice_no:document.getElementById('e-invno').value.trim(),
       tax_no:document.getElementById('e-taxno').value.trim(),
-      invoice_date:document.getElementById('e-invdate').value,
-      payment_date:document.getElementById('e-paydate').value,
+      invoice_date: document.getElementById('e-invdate').value || '',
+      payment_date: document.getElementById('e-paydate').value || '',
       wht:document.getElementById('e-wht').value,
       remark:document.getElementById('e-remark').value.trim(),
     });

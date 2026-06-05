@@ -366,7 +366,8 @@ function jobCard(j) {
   const isAlert = j.status === 'รอลูกค้าคอมเม้น' && days >= 14;
   const grp  = step.group;
 
-  const chipHtml = `<span class="status-chip" style="background:${cfg[0]};color:${cfg[1]}"><span class="chip-dot" style="background:${cfg[2]}"></span>${j.status}</span>`;
+  const chipLabel = j.status === 'ส่งเอกสาร' ? 'รอเงินเข้า' : j.status;
+  const chipHtml = `<span class="status-chip" style="background:${cfg[0]};color:${cfg[1]}"><span class="chip-dot" style="background:${cfg[2]}"></span>${chipLabel}</span>`;
   const po = j.po_status === 'ออกแล้ว' ? `<span class="tag tag-po-yes">PO ✓</span>` : `<span class="tag tag-po-no">รอ PO</span>`;
   const amt = j.total ? `<span class="tag-amount">฿${Number(j.total).toLocaleString('th-TH')}</span>` : '';
   const daysHtml = days > 0 ? `<span class="card-days ${isAlert?'warn':''}">${isAlert?'⚠️ ':''}${days} วัน</span>` : '';

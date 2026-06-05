@@ -365,6 +365,11 @@ function jobCard(j) {
   const days = daysSince(j.status_date);
   const isAlert = j.status === 'รอลูกค้าคอมเม้น' && days >= 14;
   const grp  = step.group;
+  const isDone = j.status === DONE_STATUS;
+
+  // Special flags: billed or paid but job not done yet
+  const isBilled = !isDone && j.invoice_date;
+  const isPaid   = !isDone && j.payment_date;
 
   const chipLabel = j.status === 'ส่งเอกสาร' ? 'รอเงินเข้า' : j.status;
   const chipHtml = `<span class="status-chip" style="background:${cfg[0]};color:${cfg[1]}"><span class="chip-dot" style="background:${cfg[2]}"></span>${chipLabel}</span>`;
@@ -374,9 +379,23 @@ function jobCard(j) {
         ? `<span class="status-chip" style="background:#1A3325;color:#34C759"><span class="chip-dot" style="background:#34C759"></span>ทวิ 50 ✓</span>`
         : `<span class="status-chip" style="background:#2E1010;color:#FF453A"><span class="chip-dot" style="background:#FF453A"></span>ยังไม่มีทวิ 50</span>`)
     : '';
+
+  const billedTag = isPaid
+    ? `<span style="font-size:10px;background:#2E2010;color:#FF9F0A;padding:2px 8px;border-radius:8px;font-weight:600">💰 รับเงินแล้ว</span>`
+    : isBilled
+    ? `<span style="font-size:10px;background:#1E1030;color:#BF5AF2;padding:2px 8px;border-radius:8px;font-weight:600">📋 วางบิลแล้ว</span>`
+    : '';
+
   const po = j.po_status === 'ออกแล้ว' ? `<span class="tag tag-po-yes">PO ✓</span>` : `<span class="tag tag-po-no">รอ PO</span>`;
   const amt = j.total ? `<span class="tag-amount">฿${Number(j.total).toLocaleString('th-TH')}</span>` : '';
   const daysHtml = days > 0 ? `<span class="card-days ${isAlert?'warn':''}">${isAlert?'⚠️ ':''}${days} วัน</span>` : '';
+
+  // Left border color override for billed/paid
+  const borderStyle = isPaid
+    ? 'border-color:rgba(255,159,10,.5);'
+    : isBilled
+    ? 'border-color:rgba(191,90,242,.4);'
+    : '';
 
   const docInfo = `<div style="margin-top:6px;display:flex;flex-direction:column;gap:3px">
     ${j.quotation_no ? `<div style="font-size:11px;color:var(--text3)">ใบเสนอราคา <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.quotation_no}</span></div>` : ''}
@@ -384,8 +403,8 @@ function jobCard(j) {
     ${j.tax_no       ? `<div style="font-size:11px;color:var(--text3)">ใบกำกับภาษี <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.tax_no}</span></div>` : ''}
   </div>`;
 
-  return `<div class="job-card ${grp} ${isAlert?'alert':''}" onclick="openDetail('${j.job_id}')">
-    <div class="card-top"><div class="card-meta"><span class="cust-badge">${j.cust||'?'}</span><span class="job-code">${j.job_code||''}</span></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${chipHtml}${whtChip}</div></div>
+  return `<div class="job-card ${grp} ${isAlert?'alert':''}" style="${borderStyle}" onclick="openDetail('${j.job_id}')">
+    <div class="card-top"><div class="card-meta"><span class="cust-badge">${j.cust||'?'}</span><span class="job-code">${j.job_code||''}</span></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${chipHtml}${whtChip}${billedTag}</div></div>
     <div class="card-name">${j.project_name||'(ไม่มีชื่อ)'}</div>
     <div class="card-detail">${j.contact ? '👤 '+j.contact : ''}</div>
     ${j.missing_info ? `<div class="missing-box">ขาด: ${j.missing_info}</div>` : ''}

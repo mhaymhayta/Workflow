@@ -368,8 +368,10 @@ function jobCard(j) {
   const isDone = j.status === DONE_STATUS;
 
   // Special flags: billed or paid but job not done yet
-  const isBilled = !isDone && j.invoice_date;
-  const isPaid   = !isDone && j.payment_date;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const payDate = j.payment_date ? new Date(j.payment_date) : null;
+  const isPaid   = !isDone && payDate && payDate <= today;
+  const isBilled = !isDone && (j.invoice_date || (payDate && payDate > today));
 
   const chipLabel = j.status === 'ส่งเอกสาร' ? 'รอเงินเข้า' : j.status;
   const chipHtml = `<span class="status-chip" style="background:${cfg[0]};color:${cfg[1]}"><span class="chip-dot" style="background:${cfg[2]}"></span>${chipLabel}</span>`;

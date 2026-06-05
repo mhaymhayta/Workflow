@@ -368,6 +368,12 @@ function jobCard(j) {
 
   const chipLabel = j.status === 'ส่งเอกสาร' ? 'รอเงินเข้า' : j.status;
   const chipHtml = `<span class="status-chip" style="background:${cfg[0]};color:${cfg[1]}"><span class="chip-dot" style="background:${cfg[2]}"></span>${chipLabel}</span>`;
+
+  const whtChip = isDone
+    ? (j.wht === 'ครบแล้ว'
+        ? `<span class="status-chip" style="background:#1A3325;color:#34C759"><span class="chip-dot" style="background:#34C759"></span>ทวิ 50 ✓</span>`
+        : `<span class="status-chip" style="background:#2E1010;color:#FF453A"><span class="chip-dot" style="background:#FF453A"></span>ยังไม่มีทวิ 50</span>`)
+    : '';
   const po = j.po_status === 'ออกแล้ว' ? `<span class="tag tag-po-yes">PO ✓</span>` : `<span class="tag tag-po-no">รอ PO</span>`;
   const amt = j.total ? `<span class="tag-amount">฿${Number(j.total).toLocaleString('th-TH')}</span>` : '';
   const daysHtml = days > 0 ? `<span class="card-days ${isAlert?'warn':''}">${isAlert?'⚠️ ':''}${days} วัน</span>` : '';
@@ -379,7 +385,7 @@ function jobCard(j) {
   </div>`;
 
   return `<div class="job-card ${grp} ${isAlert?'alert':''}" onclick="openDetail('${j.job_id}')">
-    <div class="card-top"><div class="card-meta"><span class="cust-badge">${j.cust||'?'}</span><span class="job-code">${j.job_code||''}</span></div>${chipHtml}</div>
+    <div class="card-top"><div class="card-meta"><span class="cust-badge">${j.cust||'?'}</span><span class="job-code">${j.job_code||''}</span></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${chipHtml}${whtChip}</div></div>
     <div class="card-name">${j.project_name||'(ไม่มีชื่อ)'}</div>
     <div class="card-detail">${j.contact ? '👤 '+j.contact : ''}</div>
     ${j.missing_info ? `<div class="missing-box">ขาด: ${j.missing_info}</div>` : ''}

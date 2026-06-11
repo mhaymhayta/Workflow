@@ -393,8 +393,8 @@ function jobCard(j) {
   const po  = j.po_status === 'ออกแล้ว' ? `<span class="tag tag-po-yes">PO ✓</span>` : `<span class="tag tag-po-no">รอ PO</span>`;
   const amt = j.total ? `<span class="tag-amount">฿${Number(j.total).toLocaleString('th-TH')}</span>` : '';
 
-  // Show payment date on card for รอเงินเข้า status
-  const payDateLabel = j.status === 'ส่งเอกสาร' && j.payment_date
+  // Show payment date on card for รอเงินเข้า or วางบิลแล้ว with payment date set
+  const payDateLabel = (j.status === 'ส่งเอกสาร' || isBilled || isPaid) && j.payment_date
     ? `<span style="font-size:10px;color:var(--purple);font-weight:600">เงินเข้า ${fmtDateTH(j.payment_date)}</span>`
     : '';
 

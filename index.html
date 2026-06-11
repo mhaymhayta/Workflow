@@ -155,7 +155,7 @@ input,select,textarea{font-family:inherit}
         <div class="topbar-sub" id="topbar-sub">กำลังโหลด...</div>
       </div>
       <div class="topbar-actions">
-        <button class="icon-btn btn-sync" id="sync-btn" onclick="syncJobs()" title="sync">↻</button>
+        <button class="icon-btn btn-sync" id="sync-btn" onclick="syncJobs()">↻</button>
         <button class="icon-btn btn-add" onclick="openAddModal()">+</button>
       </div>
     </div>
@@ -188,7 +188,7 @@ input,select,textarea{font-family:inherit}
   </div>
 
   <div class="overlay" id="modal-overlay" onclick="closeModal(event)">
-    <div class="modal-sheet" id="modal-sheet">
+    <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
         <div class="modal-title" id="modal-title">เพิ่มงานใหม่</div>
@@ -205,24 +205,24 @@ input,select,textarea{font-family:inherit}
 const API_URL = 'https://script.google.com/macros/s/AKfycbw3YFUGSsqcbr7Py8ChX7Bw5xHxO_Nlm5B7Jekzp8BlxfsbBOEy0ctsqm2_dyMhpmAq4g/exec';
 
 const STEPS = [
-  { id: 'รับงาน',                 label: 'รับงาน — รอข้อมูลจากลูกค้า',      group: 'waiting', hasMissing: true },
-  { id: 'ส่งมุมกล้อง',            label: 'ส่งมุมกล้อง — รอลูกค้าเลือกมุม',  group: 'waiting', hasMissing: true },
-  { id: 'แก้ไขมุมกล้อง',          label: 'แก้ไขมุมกล้อง',                    group: 'action',  hasMissing: true },
-  { id: 'ส่งใบเสนอราคา',          label: 'ส่งใบเสนอราคา',                    group: 'action',  hasMissing: true },
-  { id: 'ดำเนินการ ส่งภาพ draft', label: 'ดำเนินการ ส่งภาพ Render',          group: 'action',  hasMissing: true },
-  { id: 'รอลูกค้าคอมเม้น',        label: 'รอลูกค้าคอมเม้น',                  group: 'waiting' },
-  { id: 'แก้ไขตามคอมเม้น',       label: 'แก้ไขตามคอมเม้น และส่ง',           group: 'action'  },
-  { id: 'ส่ง final',              label: 'ส่ง Final แล้ว',                   group: 'action'  },
-  { id: 'วางบิล',                 label: 'วางบิล',                           group: 'action'  },
-  { id: 'เตรียมส่งเอกสาร',       label: 'เตรียมส่งเอกสาร',                  group: 'action'  },
-  { id: 'ส่งเอกสาร',              label: 'รอเงินเข้า / ส่งเอกสารแล้ว',       group: 'action'  },
-  { id: 'รับเงินแล้ว',           label: 'รับเช็ค / เงินโอนเข้าแล้ว ✓',      group: 'done'    },
+  { id: 'รับงาน',                 label: 'รับงาน — รอข้อมูลจากลูกค้า',       group: 'waiting', hasMissing: true },
+  { id: 'ส่งมุมกล้อง',            label: 'ส่งมุมกล้อง — รอลูกค้าเลือกมุม',   group: 'waiting', hasMissing: true },
+  { id: 'แก้ไขมุมกล้อง',          label: 'แก้ไขมุมกล้อง',                     group: 'action',  hasMissing: true },
+  { id: 'ส่งใบเสนอราคา',          label: 'ส่งใบเสนอราคา',                     group: 'action',  hasMissing: true },
+  { id: 'ดำเนินการ ส่งภาพ draft', label: 'ดำเนินการ ส่งภาพ Render',           group: 'action',  hasMissing: true },
+  { id: 'รอลูกค้าคอมเม้น',        label: 'รอลูกค้าคอมเม้น',                   group: 'waiting' },
+  { id: 'แก้ไขตามคอมเม้น',       label: 'แก้ไขตามคอมเม้น และส่ง',            group: 'action'  },
+  { id: 'ส่ง final',              label: 'ส่ง Final แล้ว',                    group: 'action'  },
+  { id: 'วางบิล',                 label: 'วางบิล',                            group: 'action'  },
+  { id: 'เตรียมส่งเอกสาร',       label: 'เตรียมส่งเอกสาร',                   group: 'action'  },
+  { id: 'ส่งเอกสาร',              label: 'รอเงินเข้า / ส่งเอกสารแล้ว',        group: 'action'  },
+  { id: 'รับเงินแล้ว',           label: 'รับเช็ค / เงินโอนเข้าแล้ว ✓',       group: 'done'    },
 ];
-const STEP_IDS  = STEPS.map(s => s.id);
+const STEP_IDS    = STEPS.map(s => s.id);
 const DONE_STATUS = 'รับเงินแล้ว';
-const WAIT_IDS  = STEPS.filter(s => s.group === 'waiting').map(s => s.id);
-const ACTION_IDS = STEPS.filter(s => s.group === 'action').map(s => s.id);
-const PRIORITY_STEPS = ['ส่งมุมกล้อง','ดำเนินการ ส่งภาพ draft','แก้ไขตามคอมเม้น'];
+const WAIT_IDS    = STEPS.filter(s => s.group === 'waiting').map(s => s.id);
+const ACTION_IDS  = STEPS.filter(s => s.group === 'action').map(s => s.id);
+const PRIORITY_STEPS = ['แก้ไขมุมกล้อง','ดำเนินการ ส่งภาพ draft','แก้ไขตามคอมเม้น'];
 
 const CHIP_CFG = {
   'รับงาน':                 ['#2E2010','#FF9F0A','#FF9F0A'],
@@ -242,7 +242,7 @@ const CHIP_CFG = {
 let jobs = [], currentTab = 'todo', selectedJob = null, doneSort = 'invoice';
 
 async function apiGet(action) {
-  const r = await fetch(`${API_URL}?action=${action}`, { cache: 'no-cache' });
+  const r = await fetch(`${API_URL}?action=${action}`, { cache:'no-cache' });
   return r.json();
 }
 async function apiPost(body) {
@@ -271,7 +271,6 @@ function renderAll() {
   const waiting = jobs.filter(j => WAIT_IDS.includes(j.status));
   const done    = jobs.filter(j => j.status === DONE_STATUS);
 
-  // Sort action: priority steps first
   action.sort((a,b) => {
     const ap = PRIORITY_STEPS.includes(a.status) ? 0 : 1;
     const bp = PRIORITY_STEPS.includes(b.status) ? 0 : 1;
@@ -293,18 +292,17 @@ function renderAll() {
   document.getElementById('tab-done').textContent    = `จบแล้ว (${done.length})`;
 
   const list = document.getElementById('job-list');
-  let items = currentTab === 'todo' ? action : currentTab === 'waiting' ? waiting : done;
+  const items = currentTab === 'todo' ? action : currentTab === 'waiting' ? waiting : done;
 
   if (!items.length) {
     list.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">ไม่มีงาน</div></div>`;
     return;
   }
 
-  // Summary bar for done tab
   let summaryHtml = '';
   if (currentTab === 'done') {
-    const totalDone = done.reduce((s,j) => s + (Number(j.total)||0), 0);
-    const totalAll  = jobs.reduce((s,j) => s + (Number(j.total)||0), 0);
+    const totalDone = done.reduce((s,j) => s+(Number(j.total)||0), 0);
+    const totalAll  = jobs.reduce((s,j) => s+(Number(j.total)||0), 0);
     summaryHtml = `
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:14px 16px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--border)">
@@ -341,20 +339,20 @@ function renderAll() {
     ).join('');
   } else if (currentTab === 'done') {
     if (doneSort === 'invoice') {
-      const s = [...items].sort((a,b) => (Number(String(b.invoice_no||'').replace(/\D/g,'')||0)) - (Number(String(a.invoice_no||'').replace(/\D/g,'')||0)));
+      const s = [...items].sort((a,b) => (Number(String(b.invoice_no||'').replace(/\D/g,''))||0)-(Number(String(a.invoice_no||'').replace(/\D/g,''))||0));
       list.innerHTML = summaryHtml + `<div class="list-section"><div class="section-label">เรียงตาม Invoice ล่าสุด</div>${s.map(j=>jobCard(j)).join('')}</div>`;
     } else if (doneSort === 'tax') {
-      const s = [...items].sort((a,b) => (Number(String(b.tax_no||'').replace(/\D/g,'')||0)) - (Number(String(a.tax_no||'').replace(/\D/g,'')||0)));
+      const s = [...items].sort((a,b) => (Number(String(b.tax_no||'').replace(/\D/g,''))||0)-(Number(String(a.tax_no||'').replace(/\D/g,''))||0));
       list.innerHTML = summaryHtml + `<div class="list-section"><div class="section-label">เรียงตามใบกำกับภาษีล่าสุด</div>${s.map(j=>jobCard(j)).join('')}</div>`;
     } else {
-      items.forEach(j => { const c = j.cust||'?'; if (!groups[c]) groups[c]=[]; groups[c].push(j); });
-      Object.values(groups).forEach(g => g.sort((a,b) => (Number(String(b.invoice_no||'').replace(/\D/g,'')||0)) - (Number(String(a.invoice_no||'').replace(/\D/g,'')||0))));
+      items.forEach(j => { const c=j.cust||'?'; if(!groups[c]) groups[c]=[]; groups[c].push(j); });
+      Object.values(groups).forEach(g => g.sort((a,b) => (Number(String(b.invoice_no||'').replace(/\D/g,''))||0)-(Number(String(a.invoice_no||'').replace(/\D/g,''))||0)));
       list.innerHTML = summaryHtml + Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([c,cj]) =>
         `<div class="list-section"><div class="section-label">${c} <span style="color:var(--text3);font-weight:400">${cj.length} งาน</span></div>${cj.map(j=>jobCard(j)).join('')}</div>`
       ).join('');
     }
   } else {
-    items.forEach(j => { const c = j.cust||'?'; if (!groups[c]) groups[c]=[]; groups[c].push(j); });
+    items.forEach(j => { const c=j.cust||'?'; if(!groups[c]) groups[c]=[]; groups[c].push(j); });
     list.innerHTML = summaryHtml + Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([c,cj]) =>
       `<div class="list-section"><div class="section-label">${c}</div>${cj.map(j=>jobCard(j)).join('')}</div>`
     ).join('');
@@ -362,21 +360,21 @@ function renderAll() {
 }
 
 function jobCard(j) {
-  const step = STEPS.find(s => s.id === j.status) || STEPS[0];
-  const cfg  = CHIP_CFG[j.status] || ['#222','#999','#999'];
-  const days = daysSince(j.status_date);
+  const step    = STEPS.find(s => s.id === j.status) || STEPS[0];
+  const cfg     = CHIP_CFG[j.status] || ['#222','#999','#999'];
+  const days    = daysSince(j.status_date);
   const isAlert = j.status === 'รอลูกค้าคอมเม้น' && days >= 14;
-  const grp  = step.group;
-  const isDone = j.status === DONE_STATUS;
+  const grp     = step.group;
+  const isDone  = j.status === DONE_STATUS;
 
-  // Special flags: billed or paid but job not done yet
-  const today = new Date(); today.setHours(0,0,0,0);
+  // Billed / paid before job done
+  const today   = new Date(); today.setHours(0,0,0,0);
   const payDate = j.payment_date ? new Date(j.payment_date) : null;
   const isPaid   = !isDone && payDate && payDate <= today;
   const isBilled = !isDone && (j.invoice_date || (payDate && payDate > today));
 
   const chipLabel = j.status === 'ส่งเอกสาร' ? 'รอเงินเข้า' : j.status;
-  const chipHtml = `<span class="status-chip" style="background:${cfg[0]};color:${cfg[1]}"><span class="chip-dot" style="background:${cfg[2]}"></span>${chipLabel}</span>`;
+  const chipHtml  = `<span class="status-chip" style="background:${cfg[0]};color:${cfg[1]}"><span class="chip-dot" style="background:${cfg[2]}"></span>${chipLabel}</span>`;
 
   const whtChip = isDone
     ? (j.wht === 'ครบแล้ว'
@@ -390,16 +388,17 @@ function jobCard(j) {
     ? `<span style="font-size:10px;background:#1E1030;color:#BF5AF2;padding:2px 8px;border-radius:8px;font-weight:600">📋 วางบิลแล้ว</span>`
     : '';
 
-  const po = j.po_status === 'ออกแล้ว' ? `<span class="tag tag-po-yes">PO ✓</span>` : `<span class="tag tag-po-no">รอ PO</span>`;
-  const amt = j.total ? `<span class="tag-amount">฿${Number(j.total).toLocaleString('th-TH')}</span>` : '';
-  const daysHtml = days > 0 ? `<span class="card-days ${isAlert?'warn':''}">${isAlert?'⚠️ ':''}${days} วัน</span>` : '';
+  const borderStyle = isPaid ? 'border-color:rgba(255,159,10,.5);' : isBilled ? 'border-color:rgba(191,90,242,.4);' : '';
 
-  // Left border color override for billed/paid
-  const borderStyle = isPaid
-    ? 'border-color:rgba(255,159,10,.5);'
-    : isBilled
-    ? 'border-color:rgba(191,90,242,.4);'
+  const po  = j.po_status === 'ออกแล้ว' ? `<span class="tag tag-po-yes">PO ✓</span>` : `<span class="tag tag-po-no">รอ PO</span>`;
+  const amt = j.total ? `<span class="tag-amount">฿${Number(j.total).toLocaleString('th-TH')}</span>` : '';
+
+  // Show payment date on card for รอเงินเข้า status
+  const payDateLabel = j.status === 'ส่งเอกสาร' && j.payment_date
+    ? `<span style="font-size:10px;color:var(--purple);font-weight:600">เงินเข้า ${fmtDateTH(j.payment_date)}</span>`
     : '';
+
+  const daysHtml = days > 0 ? `<span class="card-days ${isAlert?'warn':''}">${isAlert?'⚠️ ':''}${days} วัน</span>` : '';
 
   const docInfo = `<div style="margin-top:6px;display:flex;flex-direction:column;gap:3px">
     ${j.quotation_no ? `<div style="font-size:11px;color:var(--text3)">ใบเสนอราคา <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.quotation_no}</span></div>` : ''}
@@ -408,12 +407,18 @@ function jobCard(j) {
   </div>`;
 
   return `<div class="job-card ${grp} ${isAlert?'alert':''}" style="${borderStyle}" onclick="openDetail('${j.job_id}')">
-    <div class="card-top"><div class="card-meta"><span class="cust-badge">${j.cust||'?'}</span><span class="job-code">${j.job_code||''}</span></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${chipHtml}${whtChip}${billedTag}</div></div>
+    <div class="card-top">
+      <div class="card-meta"><span class="cust-badge">${j.cust||'?'}</span><span class="job-code">${j.job_code||''}</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${chipHtml}${whtChip}${billedTag}</div>
+    </div>
     <div class="card-name">${j.project_name||'(ไม่มีชื่อ)'}</div>
     <div class="card-detail">${j.contact ? '👤 '+j.contact : ''}</div>
     ${j.missing_info ? `<div class="missing-box">ขาด: ${j.missing_info}</div>` : ''}
     ${docInfo}
-    <div class="card-footer"><div class="card-tags">${po}${amt}</div>${daysHtml}</div>
+    <div class="card-footer">
+      <div class="card-tags">${po}${amt}</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">${payDateLabel}${daysHtml}</div>
+    </div>
   </div>`;
 }
 
@@ -432,7 +437,7 @@ function renderDetail() {
   const j = selectedJob;
   if (!j) return;
   document.getElementById('dp-title').textContent = j.project_name || '(ไม่มีชื่อ)';
-  const ci = STEP_IDS.indexOf(j.status);
+  const ci     = STEP_IDS.indexOf(j.status);
   const isDone = j.status === DONE_STATUS;
   const nextStep = isDone ? null : STEPS[ci + 1];
 
@@ -492,11 +497,9 @@ async function doNextStep() {
   const ci = STEP_IDS.indexOf(j.status);
   if (ci < 0 || ci >= STEPS.length - 1) return;
   const nextStatus = STEP_IDS[ci + 1];
-
   if (nextStatus === 'วางบิล' && j.po_status !== 'ออกแล้ว') {
     if (!confirm('PO ยังไม่ออก — ต้องการไปขั้น "วางบิล" เลยไหม?')) return;
   }
-
   showLoading();
   try {
     const res = await apiPost({ action:'updateJob', job_id:j.job_id, status:nextStatus });
@@ -534,7 +537,7 @@ function addForm() {
       <div class="form-group"><label class="form-label">รหัสงาน *</label><input class="form-input" id="f-jcode" placeholder="2601"></div>
     </div>
     <div class="form-group"><label class="form-label">ชื่อโครงการ *</label><input class="form-input" id="f-name" placeholder="เช่น Pleno Town เอกชัย"></div>
-    <div class="form-group"><label class="form-label">ชื่อผู้ติดต่อ</label><input class="form-input" id="f-contact" placeholder="ชื่อ Contact"></div>
+    <div class="form-group"><label class="form-label">ชื่อผู้ติดต่อ</label><input class="form-input" id="f-contact"></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">วันที่รับงาน</label><input class="form-input" id="f-recvdate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
       <div class="form-group"><label class="form-label">มูลค่า (บาท)</label><input class="form-input" id="f-total" type="number" placeholder="0"></div>
@@ -580,8 +583,8 @@ function editForm(j) {
       <div class="form-group"><label class="form-label">มูลค่า (บาท)</label><input class="form-input" id="e-total" type="number" value="${j.total||''}"></div>
     </div>
     <div class="form-group"><label class="form-label">สถานะ PO</label><select class="form-select" id="e-po"><option value="" ${j.po_status!=='ออกแล้ว'?'selected':''}>ยังไม่ออก</option><option value="ออกแล้ว" ${j.po_status==='ออกแล้ว'?'selected':''}>ออกแล้ว</option></select></div>
-    <div class="form-group"><label class="form-label">เลข Invoice</label><input class="form-input" id="e-invno" value="${escHtml(j.invoice_no||'')}" placeholder="เช่น INV2026001"></div>
-    <div class="form-group"><label class="form-label">เลขที่ใบกำกับภาษี</label><input class="form-input" id="e-taxno" value="${escHtml(j.tax_no||'')}" placeholder="เช่น IV2026001"></div>
+    <div class="form-group"><label class="form-label">เลข Invoice</label><input class="form-input" id="e-invno" value="${escHtml(j.invoice_no||'')}"></div>
+    <div class="form-group"><label class="form-label">เลขที่ใบกำกับภาษี</label><input class="form-input" id="e-taxno" value="${escHtml(j.tax_no||'')}"></div>
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">วางบิลวันที่ <button type="button" onclick="document.getElementById('e-invdate').value=''" style="font-size:10px;color:var(--red);background:var(--red-dim);border:none;border-radius:6px;padding:2px 7px;cursor:pointer;margin-left:4px">ล้าง</button></label>
@@ -607,7 +610,6 @@ function selectStatus(btn, statusId) {
   const step = STEPS.find(s => s.id === statusId);
   document.getElementById('f-missing-wrap').style.display = step?.hasMissing ? 'block' : 'none';
 }
-
 function toggleMissingFromEdit() {
   const v = document.getElementById('e-status')?.value;
   const step = STEPS.find(s => s.id === v);
@@ -653,30 +655,24 @@ async function submitEdit() {
       po_status:document.getElementById('e-po').value,
       invoice_no:document.getElementById('e-invno').value.trim(),
       tax_no:document.getElementById('e-taxno').value.trim(),
-      invoice_date: document.getElementById('e-invdate').value || '',
-      payment_date: document.getElementById('e-paydate').value || '',
+      invoice_date:document.getElementById('e-invdate').value||'',
+      payment_date:document.getElementById('e-paydate').value||'',
       wht:document.getElementById('e-wht').value,
       remark:document.getElementById('e-remark').value.trim(),
     });
-    if (res.ok) {
-      closeModal();
-      closePage();
-      await syncJobs();
-      toast('บันทึกแล้ว ✓','ok');
-    } else toast('Error: '+(res.error||''),'err');
+    if (res.ok) { closeModal(); closePage(); await syncJobs(); toast('บันทึกแล้ว ✓','ok'); }
+    else toast('Error: '+(res.error||''),'err');
   } catch(_) { toast('ไม่มีสัญญาณ','err'); }
   hideLoading();
 }
 
 function setTab(t) {
   currentTab = t;
-  ['todo','waiting','done'].forEach(id => {
-    document.getElementById('tab-'+id).classList.toggle('active', id === t);
-  });
+  ['todo','waiting','done'].forEach(id => document.getElementById('tab-'+id).classList.toggle('active', id===t));
   renderAll();
 }
 
-function daysSince(d) { if (!d) return 0; return Math.floor((Date.now()-new Date(d))/86400000); }
+function daysSince(d) { if(!d) return 0; return Math.floor((Date.now()-new Date(d))/86400000); }
 function timeAgo() { return new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}); }
 function fmtDateTH(d) {
   if (!d) return '—';

@@ -47,7 +47,13 @@ input,select,textarea{font-family:inherit}
 .list-section{margin-bottom:20px}
 .section-label{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:0 2px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .section-label::after{content:'';flex:1;height:1px;background:var(--border)}
-.job-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:13px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,background .15s;position:relative;overflow:hidden;animation:fadeIn .25s ease}
+.job-card-wrap{position:relative;margin-bottom:8px;border-radius:var(--card-r);overflow:hidden}
+.swipe-actions{position:absolute;right:0;top:0;bottom:0;display:flex;align-items:center;padding:0 8px;gap:6px;opacity:0;pointer-events:none;transition:opacity .15s}
+.swipe-actions.show{opacity:1;pointer-events:all}
+.swipe-btn{padding:8px 14px;border-radius:10px;font-size:12px;font-weight:700;border:none;cursor:pointer;font-family:'Sarabun',sans-serif;white-space:nowrap}
+.swipe-cancel{background:var(--red);color:#fff}
+.swipe-restore{background:var(--blue);color:#fff}
+.job-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:13px 14px;margin-bottom:0;cursor:pointer;position:relative;overflow:hidden;animation:fadeIn .25s ease;transition:transform .2s ease,border-color .15s,background .15s}
 .job-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
 .job-card.action::before{background:var(--amber)}
 .job-card.waiting::before{background:var(--blue)}
@@ -419,7 +425,18 @@ function jobCard(j) {
     ${j.tax_no       ? `<div style="font-size:11px;color:var(--text3)">ใบกำกับภาษี <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.tax_no}</span></div>` : ''}
   </div>`;
 
-  return `<div class="job-card ${grp} ${isAlert?'alert':''}" style="${borderStyle}" onclick="openDetail('${j.job_id}')">
+  const isCancelled = j.status === CANCELLED_STATUS;
+  const swipeBtn = isCancelled
+    ? `<button class="swipe-btn swipe-restore" onclick="event.stopPropagation();quickRestore('${j.job_id}')">↩ ทำต่อ</button>`
+    : `<button class="swipe-btn swipe-cancel" onclick="event.stopPropagation();quickCancel('${j.job_id}')">✕ ยกเลิก</button>`;
+
+  return `<div class="job-card-wrap" id="wrap-${j.job_id}">
+    <div class="swipe-actions" id="actions-${j.job_id}">${swipeBtn}</div>
+    <div class="job-card ${grp} ${isAlert?'alert':''}" style="${borderStyle}" 
+      onclick="handleCardClick(event,'${j.job_id}')"
+      ontouchstart="swipeStart(event,'${j.job_id}')"
+      ontouchmove="swipeMove(event,'${j.job_id}')"
+      ontouchend="swipeEnd(event,'${j.job_id}')">
     <div class="card-top">
       <div class="card-meta"><span class="cust-badge">${j.cust||'?'}</span><span class="job-code">${j.job_code||''}</span></div>
       <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${chipHtml}${whtChip}${billedTag}</div>
@@ -432,7 +449,7 @@ function jobCard(j) {
       <div class="card-tags">${po}${amt}</div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">${payDateLabel}${daysHtml}</div>
     </div>
-  </div>`;
+  </div></div>`;
 }
 
 function openDetail(jobId) {
@@ -744,6 +761,87 @@ function showLoading() {
   loadingEl.style.display = 'block';
 }
 function hideLoading() { if (loadingEl) loadingEl.style.display = 'none'; }
+
+// Swipe to cancel/restore
+let swipeData = {};
+const SWIPE_THRESHOLD = 80;
+
+function swipeStart(e, jobId) {
+  swipeData[jobId] = { startX: e.touches[0].clientX, swiped: false };
+}
+
+function swipeMove(e, jobId) {
+  if (!swipeData[jobId]) return;
+  const dx = swipeData[jobId].startX - e.touches[0].clientX;
+  const card = e.currentTarget;
+  const actions = document.getElementById('actions-'+jobId);
+  if (dx > 10) {
+    const move = Math.min(dx, SWIPE_THRESHOLD + 20);
+    card.style.transform = `translateX(-${move}px)`;
+    if (actions) actions.classList.add('show');
+    swipeData[jobId].swiped = dx > 40;
+    e.preventDefault();
+  }
+}
+
+function swipeEnd(e, jobId) {
+  if (!swipeData[jobId]) return;
+  const dx = swipeData[jobId].startX - e.changedTouches[0].clientX;
+  const card = e.currentTarget;
+  const actions = document.getElementById('actions-'+jobId);
+  if (dx < SWIPE_THRESHOLD) {
+    card.style.transform = '';
+    if (actions) actions.classList.remove('show');
+    swipeData[jobId].swiped = false;
+  } else {
+    card.style.transform = `translateX(-${SWIPE_THRESHOLD}px)`;
+    swipeData[jobId].swiped = true;
+  }
+}
+
+function handleCardClick(e, jobId) {
+  if (swipeData[jobId]?.swiped) {
+    // Reset swipe
+    const card = e.currentTarget;
+    const actions = document.getElementById('actions-'+jobId);
+    card.style.transform = '';
+    if (actions) actions.classList.remove('show');
+    swipeData[jobId].swiped = false;
+    return;
+  }
+  openDetail(jobId);
+}
+
+function resetSwipe(jobId) {
+  const wrap = document.getElementById('wrap-'+jobId);
+  if (!wrap) return;
+  const card = wrap.querySelector('.job-card');
+  const actions = document.getElementById('actions-'+jobId);
+  if (card) card.style.transform = '';
+  if (actions) actions.classList.remove('show');
+  if (swipeData[jobId]) swipeData[jobId].swiped = false;
+}
+
+async function quickCancel(jobId) {
+  if (!confirm('ยืนยันยกเลิกงานนี้?')) { resetSwipe(jobId); return; }
+  showLoading();
+  try {
+    const res = await apiPost({ action:'updateJob', job_id:jobId, status:CANCELLED_STATUS });
+    if (res.ok) { await syncJobs(); toast('ยกเลิกงานแล้ว','ok'); }
+    else toast('Error: '+(res.error||''),'err');
+  } catch(_) { toast('ไม่มีสัญญาณ','err'); }
+  hideLoading();
+}
+
+async function quickRestore(jobId) {
+  showLoading();
+  try {
+    const res = await apiPost({ action:'updateJob', job_id:jobId, status:'รับงาน' });
+    if (res.ok) { await syncJobs(); toast('กลับมาทำต่อแล้ว ✓','ok'); }
+    else toast('Error: '+(res.error||''),'err');
+  } catch(_) { toast('ไม่มีสัญญาณ','err'); }
+  hideLoading();
+}
 
 // Pull to refresh
 let pullStartY = 0, pulling = false, pullIndicator = null;

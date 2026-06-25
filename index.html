@@ -745,10 +745,58 @@ function showLoading() {
 }
 function hideLoading() { if (loadingEl) loadingEl.style.display = 'none'; }
 
+// Pull to refresh
+let pullStartY = 0, pulling = false, pullIndicator = null;
+
+function initPullToRefresh() {
+  const list = document.getElementById('main-page');
+
+  // Create indicator
+  pullIndicator = document.createElement('div');
+  pullIndicator.style.cssText = `
+    position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-60px);
+    background:var(--bg3);border:1px solid var(--border2);
+    color:var(--text2);padding:8px 16px;border-radius:20px;
+    font-size:12px;font-weight:600;z-index:999;
+    transition:transform .2s;pointer-events:none;
+  `;
+  pullIndicator.textContent = '↓ ดึงเพื่อ sync';
+  document.body.appendChild(pullIndicator);
+
+  document.addEventListener('touchstart', e => {
+    if (window.scrollY === 0) {
+      pullStartY = e.touches[0].clientY;
+      pulling = true;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!pulling) return;
+    const dy = e.touches[0].clientY - pullStartY;
+    if (dy > 0 && dy < 120) {
+      const progress = Math.min(dy / 80, 1);
+      pullIndicator.style.transform = `translateX(-50%) translateY(${-60 + dy * 0.8}px)`;
+      pullIndicator.textContent = dy > 60 ? '↑ ปล่อยเพื่อ sync' : '↓ ดึงเพื่อ sync';
+      pullIndicator.style.color = dy > 60 ? 'var(--green)' : 'var(--text2)';
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (!pulling) return;
+    const dy = e.changedTouches[0].clientY - pullStartY;
+    pullIndicator.style.transform = 'translateX(-50%) translateY(-60px)';
+    pullIndicator.textContent = '↓ ดึงเพื่อ sync';
+    pullIndicator.style.color = 'var(--text2)';
+    if (dy > 60 && window.scrollY === 0) syncJobs();
+    pulling = false;
+  }, { passive: true });
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   const cached = loadLocal();
   if (cached) { jobs = cached; renderAll(); }
   syncJobs();
+  initPullToRefresh();
 });
 </script>
 </body>

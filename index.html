@@ -175,6 +175,7 @@ input,select,textarea{font-family:inherit}
       <div class="tabs">
         <button class="tab active" id="tab-todo" onclick="setTab('todo')">ต้องทำ</button>
         <button class="tab" id="tab-waiting" onclick="setTab('waiting')">รอลูกค้า</button>
+        <button class="tab" id="tab-doc" onclick="setTab('doc')">เอกสาร</button>
         <button class="tab" id="tab-done" onclick="setTab('done')">จบแล้ว</button>
         <button class="tab" id="tab-cancelled" onclick="setTab('cancelled')">ยกเลิก</button>
       </div>
@@ -230,6 +231,7 @@ const STEP_IDS    = STEPS.map(s => s.id);
 const DONE_STATUS = 'รับเงินแล้ว';
 const WAIT_IDS    = STEPS.filter(s => s.group === 'waiting').map(s => s.id);
 const ACTION_IDS  = STEPS.filter(s => s.group === 'action').map(s => s.id);
+const DOC_IDS = ['ส่ง final','วางบิล','เตรียมส่งเอกสาร','ส่งเอกสาร'];
 const PRIORITY_STEPS = ['แก้ไขมุมกล้อง','ดำเนินการ ส่งภาพ draft','แก้ไขตามคอมเม้น'];
 
 const CHIP_CFG = {
@@ -278,8 +280,9 @@ function loadLocal()  { try { return JSON.parse(localStorage.getItem('jf_jobs'))
 function renderAll() {
   const cancelled = jobs.filter(j => j.status === CANCELLED_STATUS);
   const activeJobs = jobs.filter(j => j.status !== CANCELLED_STATUS);
-  const action  = activeJobs.filter(j => ACTION_IDS.includes(j.status) && j.status !== DONE_STATUS);
+  const action  = activeJobs.filter(j => ACTION_IDS.includes(j.status) && j.status !== DONE_STATUS && !DOC_IDS.includes(j.status));
   const waiting = activeJobs.filter(j => WAIT_IDS.includes(j.status));
+  const doc     = activeJobs.filter(j => DOC_IDS.includes(j.status));
   const done    = activeJobs.filter(j => j.status === DONE_STATUS);
 
   action.sort((a,b) => {
@@ -300,11 +303,12 @@ function renderAll() {
 
   document.getElementById('tab-todo').textContent      = `ต้องทำ (${action.length})`;
   document.getElementById('tab-waiting').textContent   = `รอลูกค้า (${waiting.length})`;
+  document.getElementById('tab-doc').textContent       = `เอกสาร (${doc.length})`;
   document.getElementById('tab-done').textContent      = `จบแล้ว (${done.length})`;
   document.getElementById('tab-cancelled').textContent = `ยกเลิก (${cancelled.length})`;
 
   const list = document.getElementById('job-list');
-  let items = currentTab === 'todo' ? action : currentTab === 'waiting' ? waiting : currentTab === 'done' ? done : cancelled;
+  let items = currentTab === 'todo' ? action : currentTab === 'waiting' ? waiting : currentTab === 'doc' ? doc : currentTab === 'done' ? done : cancelled;
 
   if (!items.length) {
     list.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">ไม่มีงาน</div></div>`;
@@ -363,6 +367,17 @@ function renderAll() {
         `<div class="list-section"><div class="section-label">${c} <span style="color:var(--text3);font-weight:400">${cj.length} งาน</span></div>${cj.map(j=>jobCard(j)).join('')}</div>`
       ).join('');
     }
+  } else if (currentTab === 'doc') {
+    // Group by status in step order
+    DOC_IDS.forEach(sid => {
+      const g = items.filter(j => j.status === sid);
+      if (g.length) groups[sid] = g;
+    });
+    list.innerHTML = Object.keys(groups).length === 0
+      ? `<div class="empty"><div class="empty-icon">📄</div><div class="empty-text">ไม่มีงานในขั้นตอนเอกสาร</div></div>`
+      : Object.entries(groups).map(([s,cj]) =>
+          `<div class="list-section"><div class="section-label">${s==='ส่งเอกสาร'?'รอเงินเข้า / ส่งเอกสาร':s} <span style="color:var(--text3);font-weight:400">${cj.length} งาน</span></div>${cj.map(j=>jobCard(j)).join('')}</div>`
+        ).join('');
   } else if (currentTab === 'cancelled') {
     items.forEach(j => { const c=j.cust||'?'; if(!groups[c]) groups[c]=[]; groups[c].push(j); });
     list.innerHTML = items.length === 0
@@ -736,7 +751,7 @@ async function submitEdit() {
 
 function setTab(t) {
   currentTab = t;
-  ['todo','waiting','done','cancelled'].forEach(id => document.getElementById('tab-'+id).classList.toggle('active', id===t));
+  ['todo','waiting','doc','done','cancelled'].forEach(id => document.getElementById('tab-'+id).classList.toggle('active', id===t));
   renderAll();
 }
 

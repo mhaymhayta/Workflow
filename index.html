@@ -541,6 +541,8 @@ async function doRestore() {
   } catch(_) { toast('ไม่มีสัญญาณ','err'); }
   hideLoading();
 }
+
+async function doNextStep() {
   const j = selectedJob;
   if (!j) return;
   const ci = STEP_IDS.indexOf(j.status);

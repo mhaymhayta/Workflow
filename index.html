@@ -170,6 +170,7 @@ input,select,textarea{font-family:inherit}
         <button class="tab active" id="tab-todo" onclick="setTab('todo')">ต้องทำ</button>
         <button class="tab" id="tab-waiting" onclick="setTab('waiting')">รอลูกค้า</button>
         <button class="tab" id="tab-done" onclick="setTab('done')">จบแล้ว</button>
+        <button class="tab" id="tab-cancelled" onclick="setTab('cancelled')">ยกเลิก</button>
       </div>
     </div>
     <div class="list-wrap" id="job-list"></div>
@@ -182,7 +183,7 @@ input,select,textarea{font-family:inherit}
       <button class="edit-btn" onclick="openEditModal()">แก้ไข</button>
     </div>
     <div class="page-scroll" id="dp-scroll"></div>
-    <div class="detail-action-bar">
+    <div class="detail-action-bar" id="detail-action-bar">
       <button class="next-step-btn" id="next-btn" onclick="doNextStep()">—</button>
     </div>
   </div>
@@ -218,6 +219,7 @@ const STEPS = [
   { id: 'ส่งเอกสาร',              label: 'รอเงินเข้า / ส่งเอกสารแล้ว',        group: 'action'  },
   { id: 'รับเงินแล้ว',           label: 'รับเช็ค / เงินโอนเข้าแล้ว ✓',       group: 'done'    },
 ];
+const CANCELLED_STATUS = 'ยกเลิก';
 const STEP_IDS    = STEPS.map(s => s.id);
 const DONE_STATUS = 'รับเงินแล้ว';
 const WAIT_IDS    = STEPS.filter(s => s.group === 'waiting').map(s => s.id);
@@ -237,6 +239,7 @@ const CHIP_CFG = {
   'เตรียมส่งเอกสาร':       ['#1E1030','#BF5AF2','#BF5AF2'],
   'ส่งเอกสาร':              ['#1E1030','#BF5AF2','#BF5AF2'],
   'รับเงินแล้ว':           ['#1A3325','#34C759','#34C759'],
+  'ยกเลิก':               ['#222228','#5A5A6A','#5A5A6A'],
 };
 
 let jobs = [], currentTab = 'todo', selectedJob = null, doneSort = 'invoice';
@@ -267,9 +270,11 @@ function saveLocal(j) { try { localStorage.setItem('jf_jobs', JSON.stringify(j))
 function loadLocal()  { try { return JSON.parse(localStorage.getItem('jf_jobs')); } catch(_) { return null; } }
 
 function renderAll() {
-  const action  = jobs.filter(j => ACTION_IDS.includes(j.status) && j.status !== DONE_STATUS);
-  const waiting = jobs.filter(j => WAIT_IDS.includes(j.status));
-  const done    = jobs.filter(j => j.status === DONE_STATUS);
+  const cancelled = jobs.filter(j => j.status === CANCELLED_STATUS);
+  const activeJobs = jobs.filter(j => j.status !== CANCELLED_STATUS);
+  const action  = activeJobs.filter(j => ACTION_IDS.includes(j.status) && j.status !== DONE_STATUS);
+  const waiting = activeJobs.filter(j => WAIT_IDS.includes(j.status));
+  const done    = activeJobs.filter(j => j.status === DONE_STATUS);
 
   action.sort((a,b) => {
     const ap = PRIORITY_STEPS.includes(a.status) ? 0 : 1;
@@ -281,18 +286,19 @@ function renderAll() {
   document.getElementById('st-action').textContent  = action.length;
   document.getElementById('st-waiting').textContent = waiting.length;
   document.getElementById('st-done').textContent    = done.length;
-  document.getElementById('topbar-sub').textContent = `${jobs.length} งาน · ${timeAgo()}`;
+  document.getElementById('topbar-sub').textContent = `${activeJobs.length} งาน · ${timeAgo()}`;
 
   const alertArea = document.getElementById('alert-area');
   const stale = waiting.filter(j => j.status === 'รอลูกค้าคอมเม้น' && daysSince(j.status_date) >= 14);
   alertArea.innerHTML = stale.length ? `<div class="alert-banner">⚠️ ${stale.length} งาน รอคอมเม้นเกิน 14 วัน</div>` : '';
 
-  document.getElementById('tab-todo').textContent    = `ต้องทำ (${action.length})`;
-  document.getElementById('tab-waiting').textContent = `รอลูกค้า (${waiting.length})`;
-  document.getElementById('tab-done').textContent    = `จบแล้ว (${done.length})`;
+  document.getElementById('tab-todo').textContent      = `ต้องทำ (${action.length})`;
+  document.getElementById('tab-waiting').textContent   = `รอลูกค้า (${waiting.length})`;
+  document.getElementById('tab-done').textContent      = `จบแล้ว (${done.length})`;
+  document.getElementById('tab-cancelled').textContent = `ยกเลิก (${cancelled.length})`;
 
   const list = document.getElementById('job-list');
-  const items = currentTab === 'todo' ? action : currentTab === 'waiting' ? waiting : done;
+  let items = currentTab === 'todo' ? action : currentTab === 'waiting' ? waiting : currentTab === 'done' ? done : cancelled;
 
   if (!items.length) {
     list.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">ไม่มีงาน</div></div>`;
@@ -351,6 +357,13 @@ function renderAll() {
         `<div class="list-section"><div class="section-label">${c} <span style="color:var(--text3);font-weight:400">${cj.length} งาน</span></div>${cj.map(j=>jobCard(j)).join('')}</div>`
       ).join('');
     }
+  } else if (currentTab === 'cancelled') {
+    items.forEach(j => { const c=j.cust||'?'; if(!groups[c]) groups[c]=[]; groups[c].push(j); });
+    list.innerHTML = items.length === 0
+      ? `<div class="empty"><div class="empty-icon">✓</div><div class="empty-text">ไม่มีงานที่ยกเลิก</div></div>`
+      : Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([c,cj]) =>
+          `<div class="list-section"><div class="section-label">${c}</div>${cj.map(j=>jobCard(j)).join('')}</div>`
+        ).join('');
   } else {
     items.forEach(j => { const c=j.cust||'?'; if(!groups[c]) groups[c]=[]; groups[c].push(j); });
     list.innerHTML = summaryHtml + Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([c,cj]) =>
@@ -442,9 +455,20 @@ function renderDetail() {
   const nextStep = isDone ? null : STEPS[ci + 1];
 
   const nb = document.getElementById('next-btn');
-  if (isDone) { nb.textContent = '✓ จบแล้ว'; nb.disabled = true; }
-  else if (nextStep) { nb.textContent = `→ ${nextStep.label}`; nb.disabled = false; }
-  else { nb.textContent = '—'; nb.disabled = true; }
+  const actionBar = document.getElementById('detail-action-bar');
+
+  if (j.status === CANCELLED_STATUS) {
+    actionBar.innerHTML = `
+      <button onclick="doRestore()" style="width:100%;padding:15px;background:var(--blue);color:#fff;font-size:15px;font-weight:700;border-radius:14px;border:none;cursor:pointer;font-family:'Sarabun',sans-serif">↩ กลับมาทำต่อ</button>`;
+  } else if (isDone) {
+    actionBar.innerHTML = `<button class="next-step-btn" disabled>✓ จบแล้ว</button>`;
+  } else if (nextStep) {
+    actionBar.innerHTML = `
+      <button class="next-step-btn" onclick="doNextStep()">→ ${nextStep.label}</button>
+      <button onclick="doCancel()" style="width:100%;margin-top:8px;padding:11px;background:var(--red-dim);color:var(--red);font-size:13px;font-weight:600;border-radius:12px;border:1px solid rgba(255,69,58,.3);cursor:pointer;font-family:'Sarabun',sans-serif">✕ ยกเลิกงานนี้</button>`;
+  } else {
+    actionBar.innerHTML = `<button class="next-step-btn" disabled>—</button>`;
+  }
 
   document.getElementById('dp-scroll').innerHTML = `
     <div class="detail-card">
@@ -491,7 +515,32 @@ function row(key, val, cls='') {
   return `<div class="detail-row"><span class="detail-key">${key}</span><span class="detail-val ${cls}">${val}</span></div>`;
 }
 
-async function doNextStep() {
+async function doCancel() {
+  if (!confirm('ยืนยันยกเลิกงานนี้?')) return;
+  showLoading();
+  try {
+    const res = await apiPost({ action:'updateJob', job_id:selectedJob.job_id, status:CANCELLED_STATUS });
+    if (res.ok) {
+      closePage();
+      await syncJobs();
+      toast('ยกเลิกงานแล้ว','ok');
+    } else toast('Error: '+(res.error||''),'err');
+  } catch(_) { toast('ไม่มีสัญญาณ','err'); }
+  hideLoading();
+}
+
+async function doRestore() {
+  showLoading();
+  try {
+    const res = await apiPost({ action:'updateJob', job_id:selectedJob.job_id, status:'รับงาน' });
+    if (res.ok) {
+      closePage();
+      await syncJobs();
+      toast('กลับมาทำต่อแล้ว ✓','ok');
+    } else toast('Error: '+(res.error||''),'err');
+  } catch(_) { toast('ไม่มีสัญญาณ','err'); }
+  hideLoading();
+}
   const j = selectedJob;
   if (!j) return;
   const ci = STEP_IDS.indexOf(j.status);
@@ -668,7 +717,7 @@ async function submitEdit() {
 
 function setTab(t) {
   currentTab = t;
-  ['todo','waiting','done'].forEach(id => document.getElementById('tab-'+id).classList.toggle('active', id===t));
+  ['todo','waiting','done','cancelled'].forEach(id => document.getElementById('tab-'+id).classList.toggle('active', id===t));
   renderAll();
 }
 

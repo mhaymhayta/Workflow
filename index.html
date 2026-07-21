@@ -210,7 +210,7 @@ input,select,textarea{font-family:inherit}
 </div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbw3YFUGSsqcbr7Py8ChX7Bw5xHxO_Nlm5B7Jekzp8BlxfsbBOEy0ctsqm2_dyMhpmAq4g/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxEisOK_bDryKslC1FFQAQpi8YQ07iQwhH0ME2Z70Hh6CPuTIFZjjTEPd8c2dgp3v4vTA/exec';
 
 const STEPS = [
   { id: 'รับงาน',                 label: 'รับงาน — รอข้อมูลจากลูกค้า',       group: 'action',  hasMissing: true },
@@ -491,7 +491,8 @@ function renderDetail() {
 
   if (j.status === CANCELLED_STATUS) {
     actionBar.innerHTML = `
-      <button onclick="doRestore()" style="width:100%;padding:15px;background:var(--blue);color:#fff;font-size:15px;font-weight:700;border-radius:14px;border:none;cursor:pointer;font-family:'Sarabun',sans-serif">↩ กลับมาทำต่อ</button>`;
+      <button onclick="doRestore()" style="width:100%;padding:14px;background:var(--blue);color:#fff;font-size:15px;font-weight:700;border-radius:14px;border:none;cursor:pointer;font-family:'Sarabun',sans-serif;margin-bottom:8px">↩ กลับมาทำต่อ</button>
+      <button onclick="doDelete()" style="width:100%;padding:11px;background:var(--red-dim);color:var(--red);font-size:13px;font-weight:600;border-radius:12px;border:1px solid rgba(255,69,58,.3);cursor:pointer;font-family:'Sarabun',sans-serif">🗑 ลบงานนี้ออกจากระบบ</button>`;
   } else if (isDone) {
     actionBar.innerHTML = `<button class="next-step-btn" disabled>✓ จบแล้ว</button>`;
   } else if (nextStep) {
@@ -545,6 +546,20 @@ function renderDetail() {
 
 function row(key, val, cls='') {
   return `<div class="detail-row"><span class="detail-key">${key}</span><span class="detail-val ${cls}">${val}</span></div>`;
+}
+
+async function doDelete() {
+  if (!confirm('ลบงานนี้ออกจากระบบถาวร?\nไม่สามารถกู้คืนได้')) return;
+  showLoading();
+  try {
+    const res = await apiPost({ action:'deleteJob', job_id:selectedJob.job_id });
+    if (res.ok) {
+      closePage();
+      await syncJobs();
+      toast('ลบงานแล้ว','ok');
+    } else toast('Error: '+(res.error||''),'err');
+  } catch(_) { toast('ไม่มีสัญญาณ','err'); }
+  hideLoading();
 }
 
 async function doCancel() {

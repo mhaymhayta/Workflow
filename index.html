@@ -53,6 +53,8 @@ input,select,textarea{font-family:inherit}
 .job-card.waiting::before{background:var(--blue)}
 .job-card.done::before{background:var(--green)}
 .job-card.doc::before{background:var(--purple)}
+.job-card.cancel::before{background:var(--text3)}
+.job-card.cancel{opacity:.65}
 .sv-doc{color:var(--purple)}
 .job-card:active{background:var(--bg3);border-color:var(--border2)}
 .job-card.alert{border-color:rgba(255,69,58,.4)}
@@ -174,6 +176,7 @@ input,select,textarea{font-family:inherit}
         <button class="tab" id="tab-waiting" onclick="setTab('waiting')">รอลูกค้า</button>
         <button class="tab" id="tab-docs" onclick="setTab('docs')">เอกสาร</button>
         <button class="tab" id="tab-done" onclick="setTab('done')">จบแล้ว</button>
+        <button class="tab" id="tab-cancel" onclick="setTab('cancel')">ยกเลิก</button>
       </div>
     </div>
     <div class="list-wrap" id="job-list"></div>
@@ -227,6 +230,8 @@ const DONE_STATUS = 'รับเงินแล้ว';
 const WAIT_IDS  = STEPS.filter(s => s.group === 'waiting').map(s => s.id);
 const ACTION_IDS = STEPS.filter(s => s.group === 'action').map(s => s.id);
 const DOC_IDS    = STEPS.filter(s => s.group === 'doc').map(s => s.id);
+const CANCEL_STATUS = 'ยกเลิก';
+const isCancel = s => /ยกเลิก/.test(String(s || ''));
 const PRIORITY_STEPS = ['ส่งมุมกล้อง','ดำเนินการ ส่งภาพ draft','แก้ไขตามคอมเม้น'];
 
 const CHIP_CFG = {
@@ -273,7 +278,8 @@ function loadLocal()  { try { return JSON.parse(localStorage.getItem('jf_jobs'))
 
 function renderAll() {
   // สถานะที่ไม่รู้จัก (เช่นชื่อเก่า) ให้อยู่ในต้องทำ จะได้ไม่หายจากทุกแท็บ
-  const action  = jobs.filter(j => !WAIT_IDS.includes(j.status) && !DOC_IDS.includes(j.status) && j.status !== DONE_STATUS);
+  const cancel  = jobs.filter(j => isCancel(j.status));
+  const action  = jobs.filter(j => !WAIT_IDS.includes(j.status) && !DOC_IDS.includes(j.status) && j.status !== DONE_STATUS && !isCancel(j.status));
   const docs    = jobs.filter(j => DOC_IDS.includes(j.status));
   const waiting = jobs.filter(j => WAIT_IDS.includes(j.status));
   const done    = jobs.filter(j => j.status === DONE_STATUS);
@@ -300,9 +306,10 @@ function renderAll() {
   document.getElementById('tab-waiting').textContent = `รอลูกค้า (${waiting.length})`;
   document.getElementById('tab-docs').textContent    = `เอกสาร (${docs.length})`;
   document.getElementById('tab-done').textContent    = `จบแล้ว (${done.length})`;
+  document.getElementById('tab-cancel').textContent  = `ยกเลิก (${cancel.length})`;
 
   const list = document.getElementById('job-list');
-  let items = currentTab === 'todo' ? action : currentTab === 'waiting' ? waiting : currentTab === 'docs' ? docs : done;
+  let items = currentTab === 'todo' ? action : currentTab === 'waiting' ? waiting : currentTab === 'docs' ? docs : currentTab === 'cancel' ? cancel : done;
 
   if (!items.length) {
     list.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">ไม่มีงาน</div></div>`;
@@ -313,7 +320,7 @@ function renderAll() {
   let summaryHtml = '';
   if (currentTab === 'done') {
     const totalDone = done.reduce((s,j) => s + (Number(j.total)||0), 0);
-    const totalAll  = jobs.reduce((s,j) => s + (Number(j.total)||0), 0);
+    const totalAll  = jobs.filter(j => !isCancel(j.status)).reduce((s,j) => s + (Number(j.total)||0), 0);
     summaryHtml = `
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:14px 16px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--border)">
@@ -321,7 +328,7 @@ function renderAll() {
           <div style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--green)">฿${totalDone.toLocaleString('th-TH')}</div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;font-weight:600">รายได้รวมทั้งหมด</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${jobs.length} งาน</div></div>
+          <div><div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;font-weight:600">รายได้รวมทั้งหมด</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${jobs.length - cancel.length} งาน</div></div>
           <div style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--text2)">฿${totalAll.toLocaleString('th-TH')}</div>
         </div>
       </div>
@@ -382,7 +389,7 @@ function jobCard(j) {
   const cfg  = CHIP_CFG[j.status] || ['#222','#999','#999'];
   const days = daysSince(j.status_date);
   const isAlert = j.status === 'รอลูกค้าคอมเม้น' && days >= 14;
-  const grp  = step.group;
+  const grp  = isCancel(j.status) ? 'cancel' : step.group;
   const isDone = j.status === DONE_STATUS;
 
   // Special flags: billed or paid but job not done yet
@@ -456,7 +463,8 @@ function renderDetail() {
   const nextStep = isDone ? null : STEPS[ci + 1];
 
   const nb = document.getElementById('next-btn');
-  if (isDone) { nb.textContent = '✓ จบแล้ว'; nb.disabled = true; }
+  if (isCancel(j.status)) { nb.textContent = 'ยกเลิกแล้ว — กด "แก้ไข" เพื่อเปลี่ยนสถานะ'; nb.disabled = true; }
+  else if (isDone) { nb.textContent = '✓ จบแล้ว'; nb.disabled = true; }
   else if (nextStep) { nb.textContent = `→ ${nextStep.label}`; nb.disabled = false; }
   else { nb.textContent = '—'; nb.disabled = true; }
 
@@ -588,6 +596,8 @@ function editForm(j) {
       <label class="form-label">สถานะงาน</label>
       <select class="form-select" id="e-status" onchange="toggleMissingFromEdit()">
         ${STEPS.map(s => `<option value="${s.id}" ${s.id===j.status?'selected':''}>${s.label}</option>`).join('')}
+        ${!STEP_IDS.includes(j.status) && !isCancel(j.status) ? `<option value="${escHtml(j.status)}" selected>${escHtml(j.status)}</option>` : ''}
+        <option value="${isCancel(j.status) ? escHtml(j.status) : CANCEL_STATUS}" ${isCancel(j.status)?'selected':''}>✕ ยกเลิกงาน</option>
       </select>
     </div>
     <div class="form-group" id="e-missing-wrap" style="display:${hasMissing?'block':'none'}">
@@ -689,7 +699,7 @@ async function submitEdit() {
 
 function setTab(t) {
   currentTab = t;
-  ['todo','waiting','docs','done'].forEach(id => {
+  ['todo','waiting','docs','done','cancel'].forEach(id => {
     document.getElementById('tab-'+id).classList.toggle('active', id === t);
   });
   renderAll();

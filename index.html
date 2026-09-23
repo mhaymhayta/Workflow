@@ -744,8 +744,7 @@ function submitEdit() {
   const j = selectedJob;
   if (!j) return;
   const newStatus = document.getElementById('e-status').value;
-  const body = {
-    action:'updateJob', job_id:j.job_id,
+  const form = {
     project_name:document.getElementById('e-name').value.trim(),
     contact:document.getElementById('e-contact').value.trim(),
     missing_info:document.getElementById('e-missing')?.value?.trim()||'',
@@ -759,6 +758,16 @@ function submitEdit() {
     wht:document.getElementById('e-wht').value,
     remark:document.getElementById('e-remark').value.trim(),
   };
+  // ส่งไปเฉพาะช่องที่ "เปลี่ยนจริง" เท่านั้น
+  // (ถ้าส่งทุกช่อง ข้อมูลเก่าในเครื่องจะไปเขียนทับค่าใหม่ใน Sheet = ข้อมูลย้อน)
+  const body = { action:'updateJob', job_id:j.job_id };
+  const norm = v => String(v == null ? '' : v).trim();
+  Object.keys(form).forEach(k => {
+    const changed = k === 'total'
+      ? (Number(form.total) || 0) !== (Number(j.total) || 0)
+      : norm(form[k]) !== norm(j[k]);
+    if (changed) body[k] = form[k];
+  });
   // ส่ง status เฉพาะตอนเปลี่ยนจริง — ไม่งั้นตัวนับ "อยู่ step นี้ X วัน" จะรีเซ็ตทุกครั้งที่แก้
   if (newStatus !== j.status) {
     body.status = newStatus;
@@ -766,9 +775,11 @@ function submitEdit() {
     j.status_date = todayStr();
   }
   // อัพเดทหน้าจอทันที
-  ['project_name','contact','missing_info','receive_date','po_status','invoice_no','tax_no','invoice_date','payment_date','wht','remark']
-    .forEach(k => { j[k] = body[k]; });
-  j.total = Number(body.total) || 0;
+  Object.keys(body).forEach(k => {
+    if (k === 'action' || k === 'job_id' || k === 'status') return;
+    j[k] = k === 'total' ? (Number(body.total) || 0) : body[k];
+  });
+  if (Object.keys(body).length <= 2) { closeModal(); toast('ไม่มีอะไรเปลี่ยน'); return; }
   saveLocal(jobs);
   closeModal();
   closePage();

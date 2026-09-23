@@ -401,10 +401,10 @@ function jobCard(j) {
   const chipLabel = j.status === 'ส่งเอกสาร' ? 'รอเงินเข้า' : j.status;
   const chipHtml = `<span class="status-chip" style="background:${cfg[0]};color:${cfg[1]}"><span class="chip-dot" style="background:${cfg[2]}"></span>${chipLabel}</span>`;
 
-  const whtChip = isDone
-    ? (j.wht === 'ครบแล้ว'
-        ? `<span class="status-chip" style="background:#1A3325;color:#34C759"><span class="chip-dot" style="background:#34C759"></span>ทวิ 50 ✓</span>`
-        : `<span class="status-chip" style="background:#2E1010;color:#FF453A"><span class="chip-dot" style="background:#FF453A"></span>ยังไม่มีทวิ 50</span>`)
+  const whtChip = j.wht === 'ครบแล้ว'
+    ? `<span class="status-chip" style="background:#1A3325;color:#34C759"><span class="chip-dot" style="background:#34C759"></span>ทวิ 50 ✓</span>`
+    : isDone
+    ? `<span class="status-chip" style="background:#2E1010;color:#FF453A"><span class="chip-dot" style="background:#FF453A"></span>ยังไม่มีทวิ 50</span>`
     : '';
 
   const billedTag = isPaid
@@ -415,6 +415,11 @@ function jobCard(j) {
 
   const po = j.po_status === 'ออกแล้ว' ? `<span class="tag tag-po-yes">PO ✓</span>` : `<span class="tag tag-po-no">รอ PO</span>`;
   const amt = j.total ? `<span class="tag-amount">฿${Number(j.total).toLocaleString('th-TH')}</span>` : '';
+  const payHtml = payDate && !isNaN(payDate)
+    ? (payDate <= today
+        ? `<span style="font-size:11px;color:var(--text3)">💰 เงินเข้า <span style="color:var(--green);font-weight:600">${fmtDateTH(j.payment_date)}</span></span>`
+        : `<span style="font-size:11px;color:var(--text3)">📅 กำหนดเงินเข้า <span style="color:var(--amber);font-weight:600">${fmtDateTH(j.payment_date)}</span></span>`)
+    : '';
   const daysHtml = days > 0 ? `<span class="card-days ${isAlert?'warn':''}">${isAlert?'⚠️ ':''}${days} วัน</span>` : '';
 
   // Left border color override for billed/paid
@@ -428,9 +433,6 @@ function jobCard(j) {
     ${j.quotation_no ? `<div style="font-size:11px;color:var(--text3)">ใบเสนอราคา <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.quotation_no}</span></div>` : ''}
     ${j.invoice_no   ? `<div style="font-size:11px;color:var(--text3)">Invoice <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.invoice_no}</span></div>` : ''}
     ${j.tax_no       ? `<div style="font-size:11px;color:var(--text3)">ใบกำกับภาษี <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.tax_no}</span></div>` : ''}
-    ${payDate && !isNaN(payDate) ? (payDate <= today
-        ? `<div style="font-size:11px;color:var(--text3)">💰 เงินเข้า <span style="color:var(--green);font-weight:600">${fmtDateTH(j.payment_date)}</span></div>`
-        : `<div style="font-size:11px;color:var(--text3)">📅 กำหนดเงินเข้า <span style="color:var(--amber);font-weight:600">${fmtDateTH(j.payment_date)}</span></div>`) : ''}
   </div>`;
 
   return `<div class="job-card ${grp} ${isAlert?'alert':''}" style="${borderStyle}" onclick="openDetail('${j.job_id}')">
@@ -439,7 +441,7 @@ function jobCard(j) {
     <div class="card-detail">${j.contact ? '👤 '+j.contact : ''}</div>
     ${j.missing_info ? `<div class="missing-box">ขาด: ${j.missing_info}</div>` : ''}
     ${docInfo}
-    <div class="card-footer"><div class="card-tags">${po}${amt}</div>${daysHtml}</div>
+    <div class="card-footer"><div class="card-tags">${po}${amt}</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;text-align:right">${payHtml}${daysHtml}</div></div>
   </div>`;
 }
 

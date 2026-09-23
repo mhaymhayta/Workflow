@@ -47,13 +47,7 @@ input,select,textarea{font-family:inherit}
 .list-section{margin-bottom:20px}
 .section-label{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:0 2px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .section-label::after{content:'';flex:1;height:1px;background:var(--border)}
-.job-card-wrap{position:relative;margin-bottom:8px;border-radius:var(--card-r);overflow:hidden}
-.swipe-actions{position:absolute;right:0;top:0;bottom:0;display:flex;align-items:center;padding:0 8px;gap:6px;opacity:0;pointer-events:none;transition:opacity .15s}
-.swipe-actions.show{opacity:1;pointer-events:all}
-.swipe-btn{padding:8px 14px;border-radius:10px;font-size:12px;font-weight:700;border:none;cursor:pointer;font-family:'Sarabun',sans-serif;white-space:nowrap}
-.swipe-cancel{background:var(--red);color:#fff}
-.swipe-restore{background:var(--blue);color:#fff}
-.job-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:13px 14px;margin-bottom:0;cursor:pointer;position:relative;overflow:hidden;animation:fadeIn .25s ease;transition:transform .2s ease,border-color .15s,background .15s}
+.job-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:13px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,background .15s;position:relative;overflow:hidden;animation:fadeIn .25s ease}
 .job-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
 .job-card.action::before{background:var(--amber)}
 .job-card.waiting::before{background:var(--blue)}
@@ -161,7 +155,7 @@ input,select,textarea{font-family:inherit}
         <div class="topbar-sub" id="topbar-sub">กำลังโหลด...</div>
       </div>
       <div class="topbar-actions">
-        <button class="icon-btn btn-sync" id="sync-btn" onclick="syncJobs()">↻</button>
+        <button class="icon-btn btn-sync" id="sync-btn" onclick="syncJobs({fresh:true})" title="sync">↻</button>
         <button class="icon-btn btn-add" onclick="openAddModal()">+</button>
       </div>
     </div>
@@ -175,9 +169,7 @@ input,select,textarea{font-family:inherit}
       <div class="tabs">
         <button class="tab active" id="tab-todo" onclick="setTab('todo')">ต้องทำ</button>
         <button class="tab" id="tab-waiting" onclick="setTab('waiting')">รอลูกค้า</button>
-        <button class="tab" id="tab-doc" onclick="setTab('doc')">เอกสาร</button>
         <button class="tab" id="tab-done" onclick="setTab('done')">จบแล้ว</button>
-        <button class="tab" id="tab-cancelled" onclick="setTab('cancelled')">ยกเลิก</button>
       </div>
     </div>
     <div class="list-wrap" id="job-list"></div>
@@ -190,13 +182,13 @@ input,select,textarea{font-family:inherit}
       <button class="edit-btn" onclick="openEditModal()">แก้ไข</button>
     </div>
     <div class="page-scroll" id="dp-scroll"></div>
-    <div class="detail-action-bar" id="detail-action-bar">
+    <div class="detail-action-bar">
       <button class="next-step-btn" id="next-btn" onclick="doNextStep()">—</button>
     </div>
   </div>
 
   <div class="overlay" id="modal-overlay" onclick="closeModal(event)">
-    <div class="modal-sheet">
+    <div class="modal-sheet" id="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
         <div class="modal-title" id="modal-title">เพิ่มงานใหม่</div>
@@ -210,29 +202,27 @@ input,select,textarea{font-family:inherit}
 </div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbxEisOK_bDryKslC1FFQAQpi8YQ07iQwhH0ME2Z70Hh6CPuTIFZjjTEPd8c2dgp3v4vTA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbw3YFUGSsqcbr7Py8ChX7Bw5xHxO_Nlm5B7Jekzp8BlxfsbBOEy0ctsqm2_dyMhpmAq4g/exec';
 
 const STEPS = [
-  { id: 'รับงาน',                 label: 'รับงาน — รอข้อมูลจากลูกค้า',       group: 'action',  hasMissing: true },
-  { id: 'ส่งมุมกล้อง',            label: 'ส่งมุมกล้อง — รอลูกค้าเลือกมุม',   group: 'waiting', hasMissing: true },
-  { id: 'แก้ไขมุมกล้อง',          label: 'แก้ไขมุมกล้อง',                     group: 'action',  hasMissing: true },
-  { id: 'ส่งใบเสนอราคา',          label: 'ส่งใบเสนอราคา',                     group: 'action',  hasMissing: true },
-  { id: 'ดำเนินการ ส่งภาพ draft', label: 'ดำเนินการ ส่งภาพ Render',           group: 'action',  hasMissing: true },
-  { id: 'รอลูกค้าคอมเม้น',        label: 'รอลูกค้าคอมเม้น',                   group: 'waiting' },
-  { id: 'แก้ไขตามคอมเม้น',       label: 'แก้ไขตามคอมเม้น และส่ง',            group: 'action'  },
-  { id: 'ส่ง final',              label: 'ส่ง Final แล้ว',                    group: 'action'  },
-  { id: 'วางบิล',                 label: 'วางบิล',                            group: 'action'  },
-  { id: 'เตรียมส่งเอกสาร',       label: 'เตรียมส่งเอกสาร',                   group: 'action'  },
-  { id: 'ส่งเอกสาร',              label: 'รอเงินเข้า / ส่งเอกสารแล้ว',        group: 'action'  },
-  { id: 'รับเงินแล้ว',           label: 'รับเช็ค / เงินโอนเข้าแล้ว ✓',       group: 'done'    },
+  { id: 'รับงาน',                 label: 'รับงาน — รอข้อมูลจากลูกค้า',      group: 'waiting', hasMissing: true },
+  { id: 'ส่งมุมกล้อง',            label: 'ส่งมุมกล้อง — รอลูกค้าเลือกมุม',  group: 'waiting', hasMissing: true },
+  { id: 'แก้ไขมุมกล้อง',          label: 'แก้ไขมุมกล้อง',                    group: 'action',  hasMissing: true },
+  { id: 'ส่งใบเสนอราคา',          label: 'ส่งใบเสนอราคา',                    group: 'action',  hasMissing: true },
+  { id: 'ดำเนินการ ส่งภาพ draft', label: 'ดำเนินการ ส่งภาพ Render',          group: 'action',  hasMissing: true },
+  { id: 'รอลูกค้าคอมเม้น',        label: 'รอลูกค้าคอมเม้น',                  group: 'waiting' },
+  { id: 'แก้ไขตามคอมเม้น',       label: 'แก้ไขตามคอมเม้น และส่ง',           group: 'action'  },
+  { id: 'ส่ง final',              label: 'ส่ง Final แล้ว',                   group: 'action'  },
+  { id: 'วางบิล',                 label: 'วางบิล',                           group: 'action'  },
+  { id: 'เตรียมส่งเอกสาร',       label: 'เตรียมส่งเอกสาร',                  group: 'action'  },
+  { id: 'ส่งเอกสาร',              label: 'รอเงินเข้า / ส่งเอกสารแล้ว',       group: 'action'  },
+  { id: 'รับเงินแล้ว',           label: 'รับเช็ค / เงินโอนเข้าแล้ว ✓',      group: 'done'    },
 ];
-const CANCELLED_STATUS = 'ยกเลิก';
-const STEP_IDS    = STEPS.map(s => s.id);
+const STEP_IDS  = STEPS.map(s => s.id);
 const DONE_STATUS = 'รับเงินแล้ว';
-const WAIT_IDS    = STEPS.filter(s => s.group === 'waiting').map(s => s.id);
-const ACTION_IDS  = STEPS.filter(s => s.group === 'action').map(s => s.id);
-const DOC_IDS = ['ส่ง final','วางบิล','เตรียมส่งเอกสาร','ส่งเอกสาร'];
-const PRIORITY_STEPS = ['แก้ไขมุมกล้อง','ดำเนินการ ส่งภาพ draft','แก้ไขตามคอมเม้น'];
+const WAIT_IDS  = STEPS.filter(s => s.group === 'waiting').map(s => s.id);
+const ACTION_IDS = STEPS.filter(s => s.group === 'action').map(s => s.id);
+const PRIORITY_STEPS = ['ส่งมุมกล้อง','ดำเนินการ ส่งภาพ draft','แก้ไขตามคอมเม้น'];
 
 const CHIP_CFG = {
   'รับงาน':                 ['#2E2010','#FF9F0A','#FF9F0A'],
@@ -247,13 +237,12 @@ const CHIP_CFG = {
   'เตรียมส่งเอกสาร':       ['#1E1030','#BF5AF2','#BF5AF2'],
   'ส่งเอกสาร':              ['#1E1030','#BF5AF2','#BF5AF2'],
   'รับเงินแล้ว':           ['#1A3325','#34C759','#34C759'],
-  'ยกเลิก':               ['#222228','#5A5A6A','#5A5A6A'],
 };
 
 let jobs = [], currentTab = 'todo', selectedJob = null, doneSort = 'invoice';
 
-async function apiGet(action) {
-  const r = await fetch(`${API_URL}?action=${action}`, { cache:'no-cache' });
+async function apiGet(action, fresh) {
+  const r = await fetch(`${API_URL}?action=${action}${fresh ? '&fresh=1' : ''}`, { cache: 'no-cache' });
   return r.json();
 }
 async function apiPost(body) {
@@ -261,30 +250,126 @@ async function apiPost(body) {
   return r.json();
 }
 
-async function syncJobs() {
+// ============================================================
+// FAST SYNC
+// - หน้าจอเปลี่ยนทันทีเมื่อกดบันทึก / เลื่อนสถานะ (ไม่ต้องรอ server)
+// - การบันทึกเข้าคิว (outbox) แล้วส่งไป Sheet เบื้องหลังทีละรายการ
+// - ถ้าไม่มีสัญญาณ คิวจะถูกเก็บไว้ในเครื่องและส่งใหม่อัตโนมัติ
+// - ส่งครบแล้วค่อยดึงข้อมูลจริงจาก Sheet มาเทียบแบบเงียบ ๆ
+// ============================================================
+const OUTBOX_KEY = 'jf_outbox';
+let outbox = loadOutbox();
+let flushing = false, syncing = false, retryTimer = null, writeGen = 0, lastSync = 0;
+
+function loadOutbox() { try { return JSON.parse(localStorage.getItem(OUTBOX_KEY)) || []; } catch(_) { return []; } }
+function saveOutbox() { try { localStorage.setItem(OUTBOX_KEY, JSON.stringify(outbox)); } catch(_){} }
+
+function enqueue(body) {
+  writeGen++;
+  outbox.push(body);
+  saveOutbox();
+  updateSub();
+  flushOutbox();
+}
+
+async function flushOutbox() {
+  if (flushing || !outbox.length) return;
+  flushing = true; updateSub();
+  let hadError = false;
+  while (outbox.length) {
+    const item = outbox[0];
+    let res;
+    try { res = await apiPost(item); }
+    catch(_) {
+      // ไม่มีสัญญาณ — เก็บคิวไว้ ลองใหม่ทีหลัง
+      flushing = false; updateSub(); scheduleRetry();
+      return;
+    }
+    outbox.shift(); saveOutbox();
+    if (res && res.ok) {
+      if (item.action === 'addJob' && item.temp_id) remapTempId(item.temp_id, res);
+    } else {
+      hadError = true;
+      toast('บันทึกไม่สำเร็จ: ' + ((res && res.error) || ''), 'err');
+    }
+  }
+  flushing = false; updateSub();
+  // ส่งครบแล้ว — ดึงข้อมูลจริงมาเทียบแบบเงียบ ๆ
+  syncJobs({ silent: true, fresh: hadError });
+}
+
+function scheduleRetry() {
+  if (retryTimer) return;
+  retryTimer = setTimeout(() => { retryTimer = null; flushOutbox(); }, 15000);
+}
+
+// งานใหม่ใช้ id ชั่วคราวก่อน พอ server ตอบกลับค่อยเปลี่ยนเป็น id จริง
+function remapTempId(tempId, res) {
+  const j = jobs.find(x => x.job_id === tempId);
+  if (j) {
+    j.job_id = res.job_id;
+    if (res.no) j.no = res.no;
+    if (res.quotation_no && !j.quotation_no) j.quotation_no = res.quotation_no;
+  }
+  outbox.forEach(it => { if (it.job_id === tempId) it.job_id = res.job_id; });
+  saveOutbox(); saveLocal(jobs);
+  if (selectedJob && selectedJob.job_id === res.job_id) renderDetail();
+}
+
+async function syncJobs(opts = {}) {
+  const { silent = false, fresh = false } = opts;
+  // ยังมีงานค้างส่ง — ส่งก่อน แล้วมันจะ sync ให้เองตอนส่งเสร็จ
+  if (outbox.length) {
+    if (!silent) toast(`กำลังบันทึก ${outbox.length} รายการ…`);
+    flushOutbox();
+    return;
+  }
+  if (syncing) return;
+  syncing = true;
   const btn = document.getElementById('sync-btn');
   btn.classList.add('spinning');
-  showLoading();
+  if (!silent) showLoading();
+  const gen = writeGen;
   try {
-    const data = await apiGet('getJobs');
-    if (data.jobs) { jobs = data.jobs; saveLocal(jobs); renderAll(); toast('sync แล้ว ✓','ok'); }
+    const data = await apiGet('getJobs', fresh);
+    // ถ้าระหว่างรอมีการแก้ไขใหม่ ห้ามเอาข้อมูลเก่ามาทับ
+    if (data.jobs && gen === writeGen && !outbox.length) {
+      jobs = data.jobs; saveLocal(jobs); lastSync = Date.now();
+      renderAll();
+      if (selectedJob) {
+        const u = jobs.find(j => j.job_id === selectedJob.job_id);
+        if (u) { selectedJob = u; renderDetail(); }
+      }
+      if (!silent) toast('sync แล้ว ✓','ok');
+    }
   } catch(e) {
-    toast('ไม่มีสัญญาณ — ใช้ข้อมูล cache','err');
-    const cached = loadLocal();
-    if (cached) { jobs = cached; renderAll(); }
-  } finally { btn.classList.remove('spinning'); hideLoading(); }
+    if (!silent) toast('ไม่มีสัญญาณ — ใช้ข้อมูลในเครื่อง','err');
+  } finally {
+    syncing = false;
+    btn.classList.remove('spinning');
+    if (!silent) hideLoading();
+    updateSub();
+  }
 }
+
+function updateSub() {
+  const el = document.getElementById('topbar-sub');
+  if (!el) return;
+  if (outbox.length) { el.textContent = `⏳ กำลังบันทึก ${outbox.length} รายการ…`; return; }
+  const t = lastSync ? new Date(lastSync).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}) : '—';
+  el.textContent = `${jobs.length} งาน · sync ${t}`;
+}
+
 function saveLocal(j) { try { localStorage.setItem('jf_jobs', JSON.stringify(j)); } catch(_){} }
 function loadLocal()  { try { return JSON.parse(localStorage.getItem('jf_jobs')); } catch(_) { return null; } }
+function todayStr() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
 function renderAll() {
-  const cancelled = jobs.filter(j => j.status === CANCELLED_STATUS);
-  const activeJobs = jobs.filter(j => j.status !== CANCELLED_STATUS);
-  const action  = activeJobs.filter(j => ACTION_IDS.includes(j.status) && j.status !== DONE_STATUS && !DOC_IDS.includes(j.status));
-  const waiting = activeJobs.filter(j => WAIT_IDS.includes(j.status));
-  const doc     = activeJobs.filter(j => DOC_IDS.includes(j.status));
-  const done    = activeJobs.filter(j => j.status === DONE_STATUS);
+  const action  = jobs.filter(j => ACTION_IDS.includes(j.status) && j.status !== DONE_STATUS);
+  const waiting = jobs.filter(j => WAIT_IDS.includes(j.status));
+  const done    = jobs.filter(j => j.status === DONE_STATUS);
 
+  // Sort action: priority steps first
   action.sort((a,b) => {
     const ap = PRIORITY_STEPS.includes(a.status) ? 0 : 1;
     const bp = PRIORITY_STEPS.includes(b.status) ? 0 : 1;
@@ -295,30 +380,29 @@ function renderAll() {
   document.getElementById('st-action').textContent  = action.length;
   document.getElementById('st-waiting').textContent = waiting.length;
   document.getElementById('st-done').textContent    = done.length;
-  document.getElementById('topbar-sub').textContent = `${activeJobs.length} งาน · ${timeAgo()}`;
+  updateSub();
 
   const alertArea = document.getElementById('alert-area');
   const stale = waiting.filter(j => j.status === 'รอลูกค้าคอมเม้น' && daysSince(j.status_date) >= 14);
   alertArea.innerHTML = stale.length ? `<div class="alert-banner">⚠️ ${stale.length} งาน รอคอมเม้นเกิน 14 วัน</div>` : '';
 
-  document.getElementById('tab-todo').textContent      = `ต้องทำ (${action.length})`;
-  document.getElementById('tab-waiting').textContent   = `รอลูกค้า (${waiting.length})`;
-  document.getElementById('tab-doc').textContent       = `เอกสาร (${doc.length})`;
-  document.getElementById('tab-done').textContent      = `จบแล้ว (${done.length})`;
-  document.getElementById('tab-cancelled').textContent = `ยกเลิก (${cancelled.length})`;
+  document.getElementById('tab-todo').textContent    = `ต้องทำ (${action.length})`;
+  document.getElementById('tab-waiting').textContent = `รอลูกค้า (${waiting.length})`;
+  document.getElementById('tab-done').textContent    = `จบแล้ว (${done.length})`;
 
   const list = document.getElementById('job-list');
-  let items = currentTab === 'todo' ? action : currentTab === 'waiting' ? waiting : currentTab === 'doc' ? doc : currentTab === 'done' ? done : cancelled;
+  let items = currentTab === 'todo' ? action : currentTab === 'waiting' ? waiting : done;
 
   if (!items.length) {
     list.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">ไม่มีงาน</div></div>`;
     return;
   }
 
+  // Summary bar for done tab
   let summaryHtml = '';
   if (currentTab === 'done') {
-    const totalDone = done.reduce((s,j) => s+(Number(j.total)||0), 0);
-    const totalAll  = jobs.reduce((s,j) => s+(Number(j.total)||0), 0);
+    const totalDone = done.reduce((s,j) => s + (Number(j.total)||0), 0);
+    const totalAll  = jobs.reduce((s,j) => s + (Number(j.total)||0), 0);
     summaryHtml = `
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:14px 16px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--border)">
@@ -355,38 +439,20 @@ function renderAll() {
     ).join('');
   } else if (currentTab === 'done') {
     if (doneSort === 'invoice') {
-      const s = [...items].sort((a,b) => (Number(String(b.invoice_no||'').replace(/\D/g,''))||0)-(Number(String(a.invoice_no||'').replace(/\D/g,''))||0));
+      const s = [...items].sort((a,b) => (Number(String(b.invoice_no||'').replace(/\D/g,'')||0)) - (Number(String(a.invoice_no||'').replace(/\D/g,'')||0)));
       list.innerHTML = summaryHtml + `<div class="list-section"><div class="section-label">เรียงตาม Invoice ล่าสุด</div>${s.map(j=>jobCard(j)).join('')}</div>`;
     } else if (doneSort === 'tax') {
-      const s = [...items].sort((a,b) => (Number(String(b.tax_no||'').replace(/\D/g,''))||0)-(Number(String(a.tax_no||'').replace(/\D/g,''))||0));
+      const s = [...items].sort((a,b) => (Number(String(b.tax_no||'').replace(/\D/g,'')||0)) - (Number(String(a.tax_no||'').replace(/\D/g,'')||0)));
       list.innerHTML = summaryHtml + `<div class="list-section"><div class="section-label">เรียงตามใบกำกับภาษีล่าสุด</div>${s.map(j=>jobCard(j)).join('')}</div>`;
     } else {
-      items.forEach(j => { const c=j.cust||'?'; if(!groups[c]) groups[c]=[]; groups[c].push(j); });
-      Object.values(groups).forEach(g => g.sort((a,b) => (Number(String(b.invoice_no||'').replace(/\D/g,''))||0)-(Number(String(a.invoice_no||'').replace(/\D/g,''))||0)));
+      items.forEach(j => { const c = j.cust||'?'; if (!groups[c]) groups[c]=[]; groups[c].push(j); });
+      Object.values(groups).forEach(g => g.sort((a,b) => (Number(String(b.invoice_no||'').replace(/\D/g,'')||0)) - (Number(String(a.invoice_no||'').replace(/\D/g,'')||0))));
       list.innerHTML = summaryHtml + Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([c,cj]) =>
         `<div class="list-section"><div class="section-label">${c} <span style="color:var(--text3);font-weight:400">${cj.length} งาน</span></div>${cj.map(j=>jobCard(j)).join('')}</div>`
       ).join('');
     }
-  } else if (currentTab === 'doc') {
-    // Group by status in step order
-    DOC_IDS.forEach(sid => {
-      const g = items.filter(j => j.status === sid);
-      if (g.length) groups[sid] = g;
-    });
-    list.innerHTML = Object.keys(groups).length === 0
-      ? `<div class="empty"><div class="empty-icon">📄</div><div class="empty-text">ไม่มีงานในขั้นตอนเอกสาร</div></div>`
-      : Object.entries(groups).map(([s,cj]) =>
-          `<div class="list-section"><div class="section-label">${s==='ส่งเอกสาร'?'รอเงินเข้า / ส่งเอกสาร':s} <span style="color:var(--text3);font-weight:400">${cj.length} งาน</span></div>${cj.map(j=>jobCard(j)).join('')}</div>`
-        ).join('');
-  } else if (currentTab === 'cancelled') {
-    items.forEach(j => { const c=j.cust||'?'; if(!groups[c]) groups[c]=[]; groups[c].push(j); });
-    list.innerHTML = items.length === 0
-      ? `<div class="empty"><div class="empty-icon">✓</div><div class="empty-text">ไม่มีงานที่ยกเลิก</div></div>`
-      : Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([c,cj]) =>
-          `<div class="list-section"><div class="section-label">${c}</div>${cj.map(j=>jobCard(j)).join('')}</div>`
-        ).join('');
   } else {
-    items.forEach(j => { const c=j.cust||'?'; if(!groups[c]) groups[c]=[]; groups[c].push(j); });
+    items.forEach(j => { const c = j.cust||'?'; if (!groups[c]) groups[c]=[]; groups[c].push(j); });
     list.innerHTML = summaryHtml + Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).map(([c,cj]) =>
       `<div class="list-section"><div class="section-label">${c}</div>${cj.map(j=>jobCard(j)).join('')}</div>`
     ).join('');
@@ -394,21 +460,21 @@ function renderAll() {
 }
 
 function jobCard(j) {
-  const step    = STEPS.find(s => s.id === j.status) || STEPS[0];
-  const cfg     = CHIP_CFG[j.status] || ['#222','#999','#999'];
-  const days    = daysSince(j.status_date);
+  const step = STEPS.find(s => s.id === j.status) || STEPS[0];
+  const cfg  = CHIP_CFG[j.status] || ['#222','#999','#999'];
+  const days = daysSince(j.status_date);
   const isAlert = j.status === 'รอลูกค้าคอมเม้น' && days >= 14;
-  const grp     = step.group;
-  const isDone  = j.status === DONE_STATUS;
+  const grp  = step.group;
+  const isDone = j.status === DONE_STATUS;
 
-  // Billed / paid before job done
-  const today   = new Date(); today.setHours(0,0,0,0);
+  // Special flags: billed or paid but job not done yet
+  const today = new Date(); today.setHours(0,0,0,0);
   const payDate = j.payment_date ? new Date(j.payment_date) : null;
   const isPaid   = !isDone && payDate && payDate <= today;
   const isBilled = !isDone && (j.invoice_date || (payDate && payDate > today));
 
   const chipLabel = j.status === 'ส่งเอกสาร' ? 'รอเงินเข้า' : j.status;
-  const chipHtml  = `<span class="status-chip" style="background:${cfg[0]};color:${cfg[1]}"><span class="chip-dot" style="background:${cfg[2]}"></span>${chipLabel}</span>`;
+  const chipHtml = `<span class="status-chip" style="background:${cfg[0]};color:${cfg[1]}"><span class="chip-dot" style="background:${cfg[2]}"></span>${chipLabel}</span>`;
 
   const whtChip = isDone
     ? (j.wht === 'ครบแล้ว'
@@ -422,17 +488,16 @@ function jobCard(j) {
     ? `<span style="font-size:10px;background:#1E1030;color:#BF5AF2;padding:2px 8px;border-radius:8px;font-weight:600">📋 วางบิลแล้ว</span>`
     : '';
 
-  const borderStyle = isPaid ? 'border-color:rgba(255,159,10,.5);' : isBilled ? 'border-color:rgba(191,90,242,.4);' : '';
-
-  const po  = j.po_status === 'ออกแล้ว' ? `<span class="tag tag-po-yes">PO ✓</span>` : `<span class="tag tag-po-no">รอ PO</span>`;
+  const po = j.po_status === 'ออกแล้ว' ? `<span class="tag tag-po-yes">PO ✓</span>` : `<span class="tag tag-po-no">รอ PO</span>`;
   const amt = j.total ? `<span class="tag-amount">฿${Number(j.total).toLocaleString('th-TH')}</span>` : '';
-
-  // Show payment date on card for รอเงินเข้า or วางบิลแล้ว with payment date set
-  const payDateLabel = (j.status === 'ส่งเอกสาร' || isBilled || isPaid) && j.payment_date
-    ? `<span style="font-size:10px;color:var(--purple);font-weight:600">เงินเข้า ${fmtDateTH(j.payment_date)}</span>`
-    : '';
-
   const daysHtml = days > 0 ? `<span class="card-days ${isAlert?'warn':''}">${isAlert?'⚠️ ':''}${days} วัน</span>` : '';
+
+  // Left border color override for billed/paid
+  const borderStyle = isPaid
+    ? 'border-color:rgba(255,159,10,.5);'
+    : isBilled
+    ? 'border-color:rgba(191,90,242,.4);'
+    : '';
 
   const docInfo = `<div style="margin-top:6px;display:flex;flex-direction:column;gap:3px">
     ${j.quotation_no ? `<div style="font-size:11px;color:var(--text3)">ใบเสนอราคา <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.quotation_no}</span></div>` : ''}
@@ -440,31 +505,14 @@ function jobCard(j) {
     ${j.tax_no       ? `<div style="font-size:11px;color:var(--text3)">ใบกำกับภาษี <span style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${j.tax_no}</span></div>` : ''}
   </div>`;
 
-  const isCancelled = j.status === CANCELLED_STATUS;
-  const swipeBtn = isCancelled
-    ? `<button class="swipe-btn swipe-restore" onclick="event.stopPropagation();quickRestore('${j.job_id}')">↩ ทำต่อ</button>`
-    : `<button class="swipe-btn swipe-cancel" onclick="event.stopPropagation();quickCancel('${j.job_id}')">✕ ยกเลิก</button>`;
-
-  return `<div class="job-card-wrap" id="wrap-${j.job_id}">
-    <div class="swipe-actions" id="actions-${j.job_id}">${swipeBtn}</div>
-    <div class="job-card ${grp} ${isAlert?'alert':''}" style="${borderStyle}" 
-      onclick="handleCardClick(event,'${j.job_id}')"
-      ontouchstart="swipeStart(event,'${j.job_id}')"
-      ontouchmove="swipeMove(event,'${j.job_id}')"
-      ontouchend="swipeEnd(event,'${j.job_id}')">
-    <div class="card-top">
-      <div class="card-meta"><span class="cust-badge">${j.cust||'?'}</span><span class="job-code">${j.job_code||''}</span></div>
-      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${chipHtml}${whtChip}${billedTag}</div>
-    </div>
+  return `<div class="job-card ${grp} ${isAlert?'alert':''}" style="${borderStyle}" onclick="openDetail('${j.job_id}')">
+    <div class="card-top"><div class="card-meta"><span class="cust-badge">${j.cust||'?'}</span><span class="job-code">${j.job_code||''}</span></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${chipHtml}${whtChip}${billedTag}</div></div>
     <div class="card-name">${j.project_name||'(ไม่มีชื่อ)'}</div>
     <div class="card-detail">${j.contact ? '👤 '+j.contact : ''}</div>
     ${j.missing_info ? `<div class="missing-box">ขาด: ${j.missing_info}</div>` : ''}
     ${docInfo}
-    <div class="card-footer">
-      <div class="card-tags">${po}${amt}</div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">${payDateLabel}${daysHtml}</div>
-    </div>
-  </div></div>`;
+    <div class="card-footer"><div class="card-tags">${po}${amt}</div>${daysHtml}</div>
+  </div>`;
 }
 
 function openDetail(jobId) {
@@ -482,26 +530,14 @@ function renderDetail() {
   const j = selectedJob;
   if (!j) return;
   document.getElementById('dp-title').textContent = j.project_name || '(ไม่มีชื่อ)';
-  const ci     = STEP_IDS.indexOf(j.status);
+  const ci = STEP_IDS.indexOf(j.status);
   const isDone = j.status === DONE_STATUS;
   const nextStep = isDone ? null : STEPS[ci + 1];
 
   const nb = document.getElementById('next-btn');
-  const actionBar = document.getElementById('detail-action-bar');
-
-  if (j.status === CANCELLED_STATUS) {
-    actionBar.innerHTML = `
-      <button onclick="doRestore()" style="width:100%;padding:14px;background:var(--blue);color:#fff;font-size:15px;font-weight:700;border-radius:14px;border:none;cursor:pointer;font-family:'Sarabun',sans-serif;margin-bottom:8px">↩ กลับมาทำต่อ</button>
-      <button onclick="doDelete()" style="width:100%;padding:11px;background:var(--red-dim);color:var(--red);font-size:13px;font-weight:600;border-radius:12px;border:1px solid rgba(255,69,58,.3);cursor:pointer;font-family:'Sarabun',sans-serif">🗑 ลบงานนี้ออกจากระบบ</button>`;
-  } else if (isDone) {
-    actionBar.innerHTML = `<button class="next-step-btn" disabled>✓ จบแล้ว</button>`;
-  } else if (nextStep) {
-    actionBar.innerHTML = `
-      <button class="next-step-btn" onclick="doNextStep()">→ ${nextStep.label}</button>
-      <button onclick="doCancel()" style="width:100%;margin-top:8px;padding:11px;background:var(--red-dim);color:var(--red);font-size:13px;font-weight:600;border-radius:12px;border:1px solid rgba(255,69,58,.3);cursor:pointer;font-family:'Sarabun',sans-serif">✕ ยกเลิกงานนี้</button>`;
-  } else {
-    actionBar.innerHTML = `<button class="next-step-btn" disabled>—</button>`;
-  }
+  if (isDone) { nb.textContent = '✓ จบแล้ว'; nb.disabled = true; }
+  else if (nextStep) { nb.textContent = `→ ${nextStep.label}`; nb.disabled = false; }
+  else { nb.textContent = '—'; nb.disabled = true; }
 
   document.getElementById('dp-scroll').innerHTML = `
     <div class="detail-card">
@@ -548,69 +584,25 @@ function row(key, val, cls='') {
   return `<div class="detail-row"><span class="detail-key">${key}</span><span class="detail-val ${cls}">${val}</span></div>`;
 }
 
-async function doDelete() {
-  if (!confirm('ลบงานนี้ออกจากระบบถาวร?\nไม่สามารถกู้คืนได้')) return;
-  showLoading();
-  try {
-    const res = await apiPost({ action:'deleteJob', job_id:selectedJob.job_id });
-    if (res.ok) {
-      closePage();
-      await syncJobs();
-      toast('ลบงานแล้ว','ok');
-    } else toast('Error: '+(res.error||''),'err');
-  } catch(_) { toast('ไม่มีสัญญาณ','err'); }
-  hideLoading();
-}
-
-async function doCancel() {
-  if (!confirm('ยืนยันยกเลิกงานนี้?')) return;
-  showLoading();
-  try {
-    const res = await apiPost({ action:'updateJob', job_id:selectedJob.job_id, status:CANCELLED_STATUS });
-    if (res.ok) {
-      closePage();
-      await syncJobs();
-      toast('ยกเลิกงานแล้ว','ok');
-    } else toast('Error: '+(res.error||''),'err');
-  } catch(_) { toast('ไม่มีสัญญาณ','err'); }
-  hideLoading();
-}
-
-async function doRestore() {
-  showLoading();
-  try {
-    const res = await apiPost({ action:'updateJob', job_id:selectedJob.job_id, status:'รับงาน' });
-    if (res.ok) {
-      closePage();
-      await syncJobs();
-      toast('กลับมาทำต่อแล้ว ✓','ok');
-    } else toast('Error: '+(res.error||''),'err');
-  } catch(_) { toast('ไม่มีสัญญาณ','err'); }
-  hideLoading();
-}
-
 async function doNextStep() {
   const j = selectedJob;
   if (!j) return;
   const ci = STEP_IDS.indexOf(j.status);
   if (ci < 0 || ci >= STEPS.length - 1) return;
   const nextStatus = STEP_IDS[ci + 1];
+
   if (nextStatus === 'วางบิล' && j.po_status !== 'ออกแล้ว') {
     if (!confirm('PO ยังไม่ออก — ต้องการไปขั้น "วางบิล" เลยไหม?')) return;
   }
-  showLoading();
-  try {
-    const res = await apiPost({ action:'updateJob', job_id:j.job_id, status:nextStatus });
-    if (res.ok) {
-      closePage();
-      j.status = nextStatus;
-      j.status_date = new Date().toISOString().slice(0,10);
-      saveLocal(jobs);
-      await syncJobs();
-      toast(`อัพเดทเป็น "${nextStatus}" แล้ว ✓`,'ok');
-    } else toast('เกิดข้อผิดพลาด: '+(res.error||''),'err');
-  } catch(_) { toast('ไม่มีสัญญาณ','err'); }
-  hideLoading();
+
+  // อัพเดทหน้าจอทันที แล้วค่อยส่งไป Sheet เบื้องหลัง
+  j.status = nextStatus;
+  j.status_date = todayStr();
+  saveLocal(jobs);
+  closePage();
+  renderAll();
+  toast(`อัพเดทเป็น "${nextStatus}" แล้ว ✓`,'ok');
+  enqueue({ action:'updateJob', job_id:j.job_id, status:nextStatus });
 }
 
 function openAddModal() {
@@ -635,7 +627,7 @@ function addForm() {
       <div class="form-group"><label class="form-label">รหัสงาน *</label><input class="form-input" id="f-jcode" placeholder="2601"></div>
     </div>
     <div class="form-group"><label class="form-label">ชื่อโครงการ *</label><input class="form-input" id="f-name" placeholder="เช่น Pleno Town เอกชัย"></div>
-    <div class="form-group"><label class="form-label">ชื่อผู้ติดต่อ</label><input class="form-input" id="f-contact"></div>
+    <div class="form-group"><label class="form-label">ชื่อผู้ติดต่อ</label><input class="form-input" id="f-contact" placeholder="ชื่อ Contact"></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">วันที่รับงาน</label><input class="form-input" id="f-recvdate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
       <div class="form-group"><label class="form-label">มูลค่า (บาท)</label><input class="form-input" id="f-total" type="number" placeholder="0"></div>
@@ -681,8 +673,8 @@ function editForm(j) {
       <div class="form-group"><label class="form-label">มูลค่า (บาท)</label><input class="form-input" id="e-total" type="number" value="${j.total||''}"></div>
     </div>
     <div class="form-group"><label class="form-label">สถานะ PO</label><select class="form-select" id="e-po"><option value="" ${j.po_status!=='ออกแล้ว'?'selected':''}>ยังไม่ออก</option><option value="ออกแล้ว" ${j.po_status==='ออกแล้ว'?'selected':''}>ออกแล้ว</option></select></div>
-    <div class="form-group"><label class="form-label">เลข Invoice</label><input class="form-input" id="e-invno" value="${escHtml(j.invoice_no||'')}"></div>
-    <div class="form-group"><label class="form-label">เลขที่ใบกำกับภาษี</label><input class="form-input" id="e-taxno" value="${escHtml(j.tax_no||'')}"></div>
+    <div class="form-group"><label class="form-label">เลข Invoice</label><input class="form-input" id="e-invno" value="${escHtml(j.invoice_no||'')}" placeholder="เช่น INV2026001"></div>
+    <div class="form-group"><label class="form-label">เลขที่ใบกำกับภาษี</label><input class="form-input" id="e-taxno" value="${escHtml(j.tax_no||'')}" placeholder="เช่น IV2026001"></div>
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">วางบิลวันที่ <button type="button" onclick="document.getElementById('e-invdate').value=''" style="font-size:10px;color:var(--red);background:var(--red-dim);border:none;border-radius:6px;padding:2px 7px;cursor:pointer;margin-left:4px">ล้าง</button></label>
@@ -708,6 +700,7 @@ function selectStatus(btn, statusId) {
   const step = STEPS.find(s => s.id === statusId);
   document.getElementById('f-missing-wrap').style.display = step?.hasMissing ? 'block' : 'none';
 }
+
 function toggleMissingFromEdit() {
   const v = document.getElementById('e-status')?.value;
   const step = STEPS.find(s => s.id === v);
@@ -719,58 +712,80 @@ async function submitAdd() {
   const cust = document.getElementById('f-cust').value.trim().toUpperCase();
   const name = document.getElementById('f-name').value.trim();
   if (!cust || !name) { toast('กรุณากรอก Cust. และชื่อโครงการ','err'); return; }
-  showLoading();
-  try {
-    const res = await apiPost({
-      action:'addJob', cust, job_code:document.getElementById('f-jcode').value.trim(),
-      project_name:name, contact:document.getElementById('f-contact').value.trim(),
-      receive_date:document.getElementById('f-recvdate').value,
-      total:document.getElementById('f-total').value||0,
-      po_status:document.getElementById('f-po').value,
-      status:document.getElementById('f-status').value,
-      missing_info:document.getElementById('f-missing')?.value?.trim()||'',
-      remark:document.getElementById('f-remark').value.trim(),
-    });
-    if (res.ok) { closeModal(); await syncJobs(); toast('เพิ่มงานแล้ว ✓','ok'); }
-    else toast('Error: '+(res.error||''),'err');
-  } catch(_) { toast('ไม่มีสัญญาณ','err'); }
-  hideLoading();
+  const body = {
+    action:'addJob', cust, job_code:document.getElementById('f-jcode').value.trim(),
+    project_name:name, contact:document.getElementById('f-contact').value.trim(),
+    receive_date:document.getElementById('f-recvdate').value,
+    total:document.getElementById('f-total').value||0,
+    po_status:document.getElementById('f-po').value,
+    status:document.getElementById('f-status').value,
+    missing_info:document.getElementById('f-missing')?.value?.trim()||'',
+    remark:document.getElementById('f-remark').value.trim(),
+  };
+  // ใส่งานลงหน้าจอทันทีด้วย id ชั่วคราว
+  const tempId = 'tmp_' + Date.now();
+  jobs.push({
+    job_id: tempId, no: '', cust: body.cust, job_code: body.job_code,
+    project_name: body.project_name, contact: body.contact, quotation_no: '',
+    po_status: body.po_status, invoice_date: '', payment_date: '', wht: '',
+    total: Number(body.total) || 0, remark: body.remark, status: body.status,
+    missing_info: body.missing_info, status_date: todayStr(),
+    receive_date: body.receive_date || todayStr(),
+    tax_no: '', invoice_no: '', po_number: '', doc_sent_date: '',
+  });
+  saveLocal(jobs);
+  closeModal();
+  renderAll();
+  toast('เพิ่มงานแล้ว ✓','ok');
+  enqueue({ ...body, temp_id: tempId });
 }
 
-async function submitEdit() {
+function submitEdit() {
   const j = selectedJob;
   if (!j) return;
-  showLoading();
-  try {
-    const res = await apiPost({
-      action:'updateJob', job_id:j.job_id,
-      project_name:document.getElementById('e-name').value.trim(),
-      contact:document.getElementById('e-contact').value.trim(),
-      status:document.getElementById('e-status').value,
-      missing_info:document.getElementById('e-missing')?.value?.trim()||'',
-      receive_date:document.getElementById('e-recvdate').value,
-      total:document.getElementById('e-total').value||j.total,
-      po_status:document.getElementById('e-po').value,
-      invoice_no:document.getElementById('e-invno').value.trim(),
-      tax_no:document.getElementById('e-taxno').value.trim(),
-      invoice_date:document.getElementById('e-invdate').value||'',
-      payment_date:document.getElementById('e-paydate').value||'',
-      wht:document.getElementById('e-wht').value,
-      remark:document.getElementById('e-remark').value.trim(),
-    });
-    if (res.ok) { closeModal(); closePage(); await syncJobs(); toast('บันทึกแล้ว ✓','ok'); }
-    else toast('Error: '+(res.error||''),'err');
-  } catch(_) { toast('ไม่มีสัญญาณ','err'); }
-  hideLoading();
+  const newStatus = document.getElementById('e-status').value;
+  const body = {
+    action:'updateJob', job_id:j.job_id,
+    project_name:document.getElementById('e-name').value.trim(),
+    contact:document.getElementById('e-contact').value.trim(),
+    missing_info:document.getElementById('e-missing')?.value?.trim()||'',
+    receive_date:document.getElementById('e-recvdate').value,
+    total:document.getElementById('e-total').value||j.total,
+    po_status:document.getElementById('e-po').value,
+    invoice_no:document.getElementById('e-invno').value.trim(),
+    tax_no:document.getElementById('e-taxno').value.trim(),
+    invoice_date: document.getElementById('e-invdate').value || '',
+    payment_date: document.getElementById('e-paydate').value || '',
+    wht:document.getElementById('e-wht').value,
+    remark:document.getElementById('e-remark').value.trim(),
+  };
+  // ส่ง status เฉพาะตอนเปลี่ยนจริง — ไม่งั้นตัวนับ "อยู่ step นี้ X วัน" จะรีเซ็ตทุกครั้งที่แก้
+  if (newStatus !== j.status) {
+    body.status = newStatus;
+    j.status = newStatus;
+    j.status_date = todayStr();
+  }
+  // อัพเดทหน้าจอทันที
+  ['project_name','contact','missing_info','receive_date','po_status','invoice_no','tax_no','invoice_date','payment_date','wht','remark']
+    .forEach(k => { j[k] = body[k]; });
+  j.total = Number(body.total) || 0;
+  saveLocal(jobs);
+  closeModal();
+  closePage();
+  renderAll();
+  toast('บันทึกแล้ว ✓','ok');
+  enqueue(body);
 }
 
 function setTab(t) {
   currentTab = t;
-  ['todo','waiting','doc','done','cancelled'].forEach(id => document.getElementById('tab-'+id).classList.toggle('active', id===t));
+  ['todo','waiting','done'].forEach(id => {
+    document.getElementById('tab-'+id).classList.toggle('active', id === t);
+  });
   renderAll();
 }
 
-function daysSince(d) { if(!d) return 0; return Math.floor((Date.now()-new Date(d))/86400000); }
+function daysSince(d) { if (!d) return 0; return Math.floor((Date.now()-new Date(d))/86400000); }
 function timeAgo() { return new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}); }
 function fmtDateTH(d) {
   if (!d) return '—';
@@ -792,140 +807,18 @@ function showLoading() {
 }
 function hideLoading() { if (loadingEl) loadingEl.style.display = 'none'; }
 
-// Swipe to cancel/restore
-let swipeData = {};
-const SWIPE_THRESHOLD = 80;
-
-function swipeStart(e, jobId) {
-  swipeData[jobId] = { startX: e.touches[0].clientX, swiped: false };
-}
-
-function swipeMove(e, jobId) {
-  if (!swipeData[jobId]) return;
-  const dx = swipeData[jobId].startX - e.touches[0].clientX;
-  const card = e.currentTarget;
-  const actions = document.getElementById('actions-'+jobId);
-  if (dx > 10) {
-    const move = Math.min(dx, SWIPE_THRESHOLD + 20);
-    card.style.transform = `translateX(-${move}px)`;
-    if (actions) actions.classList.add('show');
-    swipeData[jobId].swiped = dx > 40;
-    e.preventDefault();
-  }
-}
-
-function swipeEnd(e, jobId) {
-  if (!swipeData[jobId]) return;
-  const dx = swipeData[jobId].startX - e.changedTouches[0].clientX;
-  const card = e.currentTarget;
-  const actions = document.getElementById('actions-'+jobId);
-  if (dx < SWIPE_THRESHOLD) {
-    card.style.transform = '';
-    if (actions) actions.classList.remove('show');
-    swipeData[jobId].swiped = false;
-  } else {
-    card.style.transform = `translateX(-${SWIPE_THRESHOLD}px)`;
-    swipeData[jobId].swiped = true;
-  }
-}
-
-function handleCardClick(e, jobId) {
-  if (swipeData[jobId]?.swiped) {
-    // Reset swipe
-    const card = e.currentTarget;
-    const actions = document.getElementById('actions-'+jobId);
-    card.style.transform = '';
-    if (actions) actions.classList.remove('show');
-    swipeData[jobId].swiped = false;
-    return;
-  }
-  openDetail(jobId);
-}
-
-function resetSwipe(jobId) {
-  const wrap = document.getElementById('wrap-'+jobId);
-  if (!wrap) return;
-  const card = wrap.querySelector('.job-card');
-  const actions = document.getElementById('actions-'+jobId);
-  if (card) card.style.transform = '';
-  if (actions) actions.classList.remove('show');
-  if (swipeData[jobId]) swipeData[jobId].swiped = false;
-}
-
-async function quickCancel(jobId) {
-  if (!confirm('ยืนยันยกเลิกงานนี้?')) { resetSwipe(jobId); return; }
-  showLoading();
-  try {
-    const res = await apiPost({ action:'updateJob', job_id:jobId, status:CANCELLED_STATUS });
-    if (res.ok) { await syncJobs(); toast('ยกเลิกงานแล้ว','ok'); }
-    else toast('Error: '+(res.error||''),'err');
-  } catch(_) { toast('ไม่มีสัญญาณ','err'); }
-  hideLoading();
-}
-
-async function quickRestore(jobId) {
-  showLoading();
-  try {
-    const res = await apiPost({ action:'updateJob', job_id:jobId, status:'รับงาน' });
-    if (res.ok) { await syncJobs(); toast('กลับมาทำต่อแล้ว ✓','ok'); }
-    else toast('Error: '+(res.error||''),'err');
-  } catch(_) { toast('ไม่มีสัญญาณ','err'); }
-  hideLoading();
-}
-
-// Pull to refresh
-let pullStartY = 0, pulling = false, pullIndicator = null;
-
-function initPullToRefresh() {
-  const list = document.getElementById('main-page');
-
-  // Create indicator
-  pullIndicator = document.createElement('div');
-  pullIndicator.style.cssText = `
-    position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-60px);
-    background:var(--bg3);border:1px solid var(--border2);
-    color:var(--text2);padding:8px 16px;border-radius:20px;
-    font-size:12px;font-weight:600;z-index:999;
-    transition:transform .2s;pointer-events:none;
-  `;
-  pullIndicator.textContent = '↓ ดึงเพื่อ sync';
-  document.body.appendChild(pullIndicator);
-
-  document.addEventListener('touchstart', e => {
-    if (window.scrollY === 0) {
-      pullStartY = e.touches[0].clientY;
-      pulling = true;
-    }
-  }, { passive: true });
-
-  document.addEventListener('touchmove', e => {
-    if (!pulling) return;
-    const dy = e.touches[0].clientY - pullStartY;
-    if (dy > 0 && dy < 120) {
-      const progress = Math.min(dy / 80, 1);
-      pullIndicator.style.transform = `translateX(-50%) translateY(${-60 + dy * 0.8}px)`;
-      pullIndicator.textContent = dy > 60 ? '↑ ปล่อยเพื่อ sync' : '↓ ดึงเพื่อ sync';
-      pullIndicator.style.color = dy > 60 ? 'var(--green)' : 'var(--text2)';
-    }
-  }, { passive: true });
-
-  document.addEventListener('touchend', e => {
-    if (!pulling) return;
-    const dy = e.changedTouches[0].clientY - pullStartY;
-    pullIndicator.style.transform = 'translateX(-50%) translateY(-60px)';
-    pullIndicator.textContent = '↓ ดึงเพื่อ sync';
-    pullIndicator.style.color = 'var(--text2)';
-    if (dy > 60 && window.scrollY === 0) syncJobs();
-    pulling = false;
-  }, { passive: true });
-}
-
 window.addEventListener('DOMContentLoaded', () => {
+  // แสดงข้อมูลในเครื่องทันที แล้วค่อย sync เบื้องหลัง
   const cached = loadLocal();
   if (cached) { jobs = cached; renderAll(); }
-  syncJobs();
-  initPullToRefresh();
+  if (outbox.length) flushOutbox();   // มีงานค้างส่งจากรอบก่อน — ส่งก่อน
+  else syncJobs({ silent: !!cached });
 });
+// สลับกลับมาที่แอป — sync เงียบ ๆ ถ้าห่างจากครั้งล่าสุดเกิน 1 นาที
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && Date.now() - lastSync > 60000) syncJobs({ silent: true });
+});
+window.addEventListener('online', () => flushOutbox());
 </script>
 </body>
 </html>

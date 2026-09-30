@@ -415,10 +415,15 @@ function jobCard(j) {
 
   const po = j.po_status === 'ออกแล้ว' ? `<span class="tag tag-po-yes">PO ✓</span>` : `<span class="tag tag-po-no">รอ PO</span>`;
   const amt = j.total ? `<span class="tag-amount">฿${Number(j.total).toLocaleString('th-TH')}</span>` : '';
-  const payHtml = payDate && !isNaN(payDate)
-    ? (payDate <= today
-        ? `<span style="font-size:11px;color:var(--text3)">💰 เงินเข้า <span style="color:var(--green);font-weight:600">${fmtDateTH(j.payment_date)}</span></span>`
+
+  // วันที่เงินเข้า: ถ้าสถานะ "รับเงินแล้ว" หรือถึงวันแล้ว → ตัวเขียว "เงินเข้า" / ยังไม่ถึง → ส้ม "กำหนดเงินเข้า"
+  const hasPayDate = payDate && !isNaN(payDate);
+  const payHtml = hasPayDate
+    ? ((isDone || payDate <= today)
+        ? `<span style="font-size:11px;color:var(--green);font-weight:600">💰 เงินเข้า ${fmtDateTH(j.payment_date)}</span>`
         : `<span style="font-size:11px;color:var(--text3)">📅 กำหนดเงินเข้า <span style="color:var(--amber);font-weight:600">${fmtDateTH(j.payment_date)}</span></span>`)
+    : isDone
+    ? `<span style="font-size:11px;color:var(--green);font-weight:600">💰 เงินเข้าแล้ว</span>`
     : '';
   const daysHtml = days > 0 ? `<span class="card-days ${isAlert?'warn':''}">${isAlert?'⚠️ ':''}${days} วัน</span>` : '';
 
